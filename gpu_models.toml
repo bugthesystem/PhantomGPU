@@ -1,21 +1,37 @@
 # GPU Models Configuration for Phantom GPU
 # This file defines the specifications for various GPU models used in emulation
 
-[gpus.v100]
-name = "Tesla V100"
-memory_gb = 32.0
-compute_tflops = 15.7
-memory_bandwidth_gbps = 900.0
-architecture = "Volta"
-release_year = 2017
+[gpus.h200]
+name = "H200"
+memory_gb = 141.0
+compute_tflops = 67.0
+memory_bandwidth_gbps = 4900.0
+architecture = "Hopper"
+release_year = 2024
 
-[gpus.a100]
-name = "A100"
+[gpus.h100]
+name = "H100"
 memory_gb = 80.0
-compute_tflops = 19.5
-memory_bandwidth_gbps = 1935.0
-architecture = "Ampere"
-release_year = 2020
+compute_tflops = 67.0
+memory_bandwidth_gbps = 3350.0
+architecture = "Hopper"
+release_year = 2022
+
+[gpus.rtx5090]
+name = "RTX 5090"
+memory_gb = 32.0
+compute_tflops = 104.8
+memory_bandwidth_gbps = 1792.0
+architecture = "Blackwell"
+release_year = 2025
+
+[gpus.rtx_pro_6000]
+name = "RTX PRO 6000 Blackwell"
+memory_gb = 96.0
+compute_tflops = 126.0
+memory_bandwidth_gbps = 1790.0
+architecture = "Blackwell"
+release_year = 2025
 
 [gpus.rtx4090]
 name = "RTX 4090"
@@ -25,37 +41,13 @@ memory_bandwidth_gbps = 1008.0
 architecture = "Ada Lovelace"
 release_year = 2022
 
-[gpus.rtx3090]
-name = "RTX 3090"
-memory_gb = 24.0
-compute_tflops = 35.6
-memory_bandwidth_gbps = 936.0
+[gpus.a100]
+name = "A100"
+memory_gb = 80.0
+compute_tflops = 19.5
+memory_bandwidth_gbps = 1935.0
 architecture = "Ampere"
 release_year = 2020
-
-[gpus.t4]
-name = "Tesla T4"
-memory_gb = 16.0
-compute_tflops = 8.1
-memory_bandwidth_gbps = 320.0
-architecture = "Turing"
-release_year = 2018
-
-[gpus.rtx4080]
-name = "RTX 4080"
-memory_gb = 16.0
-compute_tflops = 48.7
-memory_bandwidth_gbps = 717.0
-architecture = "Ada Lovelace"
-release_year = 2022
-
-[gpus.h100]
-name = "H100"
-memory_gb = 80.0
-compute_tflops = 67.0
-memory_bandwidth_gbps = 3350.0
-architecture = "Hopper"
-release_year = 2022
 
 [gpus.a6000]
 name = "RTX A6000"
@@ -73,23 +65,31 @@ memory_bandwidth_gbps = 864.0
 architecture = "Ada Lovelace"
 release_year = 2023
 
-[gpus.mi300x]
-name = "MI300X"
-memory_gb = 192.0
-compute_tflops = 61.3
-memory_bandwidth_gbps = 5300.0
-architecture = "CDNA 3"
-release_year = 2023
+[gpus.rtx3090]
+name = "RTX 3090"
+memory_gb = 24.0
+compute_tflops = 35.6
+memory_bandwidth_gbps = 936.0
+architecture = "Ampere"
+release_year = 2020
+
+[gpus.v100]
+name = "Tesla V100"
+memory_gb = 32.0
+compute_tflops = 15.7
+memory_bandwidth_gbps = 900.0
+architecture = "Volta"
+release_year = 2017
 
 # Default GPU model to use if none specified
 [defaults]
-gpu = "v100"
+gpu = "rtx4090"
 
 # Custom GPU template for users to add their own models
 [gpus.custom]
 name = "Custom GPU"
-memory_gb = 24.0
-compute_tflops = 30.0
-memory_bandwidth_gbps = 1000.0
+memory_gb = 32.0
+compute_tflops = 50.0
+memory_bandwidth_gbps = 1200.0
 architecture = "Custom"
 release_year = 2024 

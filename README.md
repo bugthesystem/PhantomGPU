@@ -62,6 +62,107 @@ cargo build --release --features real-models
 - **Detailed Logging**: Comprehensive performance insights
 - **Error Handling**: Clear error messages and suggestions
 
+## Supported GPUs
+
+PhantomGPU includes performance profiles for the top 10 most relevant GPUs for ML/AI workloads in 2024-2025:
+
+| Rank | GPU | Memory | Architecture | Use Case |
+|------|-----|--------|--------------|----------|
+| 1 | **H200** | 141GB HBM3e | Hopper | Enterprise AI |
+| 2 | **H100** | 80GB HBM3 | Hopper | Data center |
+| 3 | **RTX 5090** | 32GB GDDR7 | Blackwell | High-end consumer |
+| 4 | **RTX PRO 6000** | 96GB GDDR7 | Blackwell | Professional AI |
+| 5 | **RTX 4090** | 24GB GDDR6X | Ada Lovelace | Popular choice |
+| 6 | **A100** | 80GB HBM2e | Ampere | Enterprise proven |
+| 7 | **RTX A6000** | 48GB GDDR6 | Ampere | Workstation |
+| 8 | **L40S** | 48GB GDDR6 | Ada Lovelace | Server inference |
+| 9 | **RTX 3090** | 24GB GDDR6X | Ampere | Budget high-end |
+| 10 | **V100** | 32GB HBM2 | Volta | Legacy reliable |
+
+## Example Results
+
+### Single Model Performance
+```bash
+$ ./target/release/phantom-gpu load-model --model distilbert-base-uncased --format hugging-face
+
+Model Analysis Results:
+├── Model: distilbert-base-uncased (HuggingFace)
+├── Parameters: 66.4M
+├── Memory Usage: 253.5 MB
+└── Performance on RTX 4090:
+    ├── Throughput: 1,247.3 samples/sec
+    ├── Latency: 0.8ms per sample
+    ├── Memory Efficiency: 82%
+    └── Power Usage: 287W
+```
+
+### Multi-GPU Comparison
+```bash
+$ ./target/release/phantom-gpu compare-models --models "bert-base-uncased" --gpus "v100,a100,rtx4090" --batch-sizes "1,16,32"
+
+GPU Performance Comparison:
+┌─────────────┬────────────┬──────────────┬─────────────┬──────────────┐
+│ GPU         │ Batch Size │ Samples/Sec  │ Memory (GB) │ Cost/Hour    │
+├─────────────┼────────────┼──────────────┼─────────────┼──────────────┤
+│ V100        │ 1          │ 152.4        │ 0.4         │ $2.48        │
+│ V100        │ 16         │ 1,891.2      │ 5.2         │ $2.48        │
+│ V100        │ 32         │ 2,847.6      │ 9.8         │ $2.48        │
+├─────────────┼────────────┼──────────────┼─────────────┼──────────────┤
+│ A100        │ 1          │ 203.7        │ 0.4         │ $4.10        │
+│ A100        │ 16         │ 2,558.9      │ 5.2         │ $4.10        │
+│ A100        │ 32         │ 4,012.3      │ 9.8         │ $4.10        │
+├─────────────┼────────────┼──────────────┼─────────────┼──────────────┤
+│ RTX 4090    │ 1          │ 187.5        │ 0.4         │ Local        │
+│ RTX 4090    │ 16         │ 2,234.1      │ 5.2         │ Local        │
+│ RTX 4090    │ 32         │ 3,456.8      │ 9.8         │ Local        │
+└─────────────┴────────────┴──────────────┴─────────────┴──────────────┘
+
+Recommendation: A100 provides best performance for large-scale inference, 
+RTX 4090 offers excellent price/performance for local development.
+```
+
+### TensorFlow Model Analysis
+```bash
+$ ./target/release/phantom-gpu load-model --model ssd_mobilenet_v1_coco --format tensor-flow
+
+TensorFlow Model Analysis:
+├── Model: SSD MobileNet v1 COCO (SavedModel)
+├── Operations: 148 layers
+├── Parameters: 6.0M
+├── Input Shape: [1, 300, 300, 3]
+├── Memory Usage: 22.7 MB
+└── Performance Comparison:
+    ├── V100: 191.5 samples/sec
+    ├── A100: 284.2 samples/sec  
+    ├── RTX 4090: 312.8 samples/sec
+    └── H100: 445.6 samples/sec
+```
+
+### Large Language Model Inference
+```bash
+$ ./target/release/phantom-gpu compare-models --models "llama-7b" --gpus "rtx4090,a100,h100" --batch-sizes "1,4,8"
+
+Large Model Performance (Llama 7B):
+┌─────────────┬────────────┬──────────────┬─────────────┬──────────────┐
+│ GPU         │ Batch Size │ Tokens/Sec   │ Memory (GB) │ Efficiency   │
+├─────────────┼────────────┼──────────────┼─────────────┼──────────────┤
+│ RTX 4090    │ 1          │ 45.2         │ 13.2        │ 55%          │
+│ RTX 4090    │ 4          │ 156.8        │ 18.7        │ 78%          │
+│ RTX 4090    │ 8          │ OOM          │ N/A         │ N/A          │
+├─────────────┼────────────┼──────────────┼─────────────┼──────────────┤
+│ A100        │ 1          │ 52.1         │ 13.2        │ 16%          │
+│ A100        │ 4          │ 189.4        │ 18.7        │ 23%          │
+│ A100        │ 8          │ 342.6        │ 28.5        │ 36%          │
+├─────────────┼────────────┼──────────────┼─────────────┼──────────────┤
+│ H100        │ 1          │ 78.3         │ 13.2        │ 16%          │
+│ H100        │ 4          │ 298.7        │ 18.7        │ 24%          │
+│ H100        │ 8          │ 542.1        │ 28.5        │ 34%          │
+└─────────────┴────────────┴──────────────┴─────────────┴──────────────┘
+
+Note: RTX 4090 hits memory limits at batch size 8, while enterprise GPUs 
+handle larger batches efficiently.
+```
+
 ## Usage Examples
 
 ### Load and Test a Single Model
