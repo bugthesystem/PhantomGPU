@@ -82,19 +82,7 @@ We explicitly avoid these to maintain focus:
 - Real GPU monitoring (prediction-focused)
 - Multiple configuration formats (TOML is sufficient)
 - Distributed system complexity (keep core simple)
-
-## Success Metrics
-
-**Phase 1 Targets:**
-- [ ] Web interface with 1000+ weekly users
-- [ ] REST API used by 10+ companies
-- [ ] 500+ GitHub stars
-
-**Phase 2 Targets:**
-- [ ] PDF reports generated for 25+ enterprise users
-- [ ] CI/CD integration in 50+ repositories
-- [ ] Real-time pricing API serving 1M+ requests/month
-
+- 
 ## Contributing
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines.
