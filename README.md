@@ -1,4 +1,4 @@
-# PhantomGPU 🚀
+# PhantomGPU 👻
 
 **Test ML models on any GPU before you buy it**
 
@@ -7,7 +7,7 @@ PhantomGPU is a high-performance GPU emulator that lets you benchmark ML models 
 ## The Problem
 
 - **Expensive Hardware**: Can't afford to buy every GPU to test your models
-- **Cloud Costs**: Ever-chaging pricing makes it hard to budget ML workloads  
+- **Cloud Costs**: Ever-changing pricing makes it hard to budget ML workloads  
 - **Performance Uncertainty**: Hard to know if your model will run efficiently on different hardware
 - **Deployment Decisions**: Choosing the right GPU for production is guesswork
 
