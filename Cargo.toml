@@ -1,0 +1,115 @@
+[package]
+name = "phantom-gpu"
+version = "0.1.0"
+edition = "2021"
+authors = ["bug the system <sarikayaziya@gmail.com>"]
+description = "Test ML models on any GPU before you buy it - High-performance GPU emulator with real hardware accuracy"
+license = "MIT"
+repository = "https://github.com/bugthesystem/phantom-gpu"
+homepage = "https://github.com/bugthesystem/phantom-gpu"
+keywords = ["gpu", "machine-learning", "emulator", "tensorflow", "pytorch"]
+categories = ["simulation", "science"]
+readme = "README.md"
+
+[features]
+default = []
+
+# Real Model Support
+onnx = ["dep:ort"]
+huggingface = ["dep:hf-hub"]
+tensorflow = []  # TensorFlow support via external Python script
+real-models = ["onnx", "huggingface", "tensorflow"]
+
+# Core ML Framework Support
+candle = ["dep:candle-core", "dep:candle-nn", "dep:candle-transformers"]
+pytorch = ["dep:tch"]
+
+# Advanced Research Features
+microarch-profiling = []
+memory-analysis = ["microarch-profiling"]
+unified-memory = ["memory-analysis"]
+
+# Automatic libtorch download
+download-libtorch = ["tch/download-libtorch"]
+
+# Combined Features
+ml-frameworks = ["candle", "pytorch", "real-models"]
+  research-full = ["microarch-profiling", "memory-analysis", "unified-memory"]
+  
+  # Academic Research Features (based on GPU emulation research papers)
+  memory-research = []
+  cache-research = []
+  dram-research = []
+  gpu-profiling-research = []
+  micro-benchmarking = []
+  architecture-research = []
+  memory-divergence-research = []
+  
+  # Combined research feature sets
+  all-research = ["memory-research", "cache-research", "dram-research", "gpu-profiling-research", "micro-benchmarking", "architecture-research", "memory-divergence-research"]
+  academic-validation = ["micro-benchmarking", "gpu-profiling-research"]
+  
+  everything = ["ml-frameworks", "research-full", "all-research"]
+
+[dependencies]
+# Core dependencies
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+futures = "0.3"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+anyhow = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+colored = "3.0"
+rand = "0.9"
+thiserror = "2.0"
+
+# Configuration file parsing
+toml = "0.8"
+
+# Parallel processing
+rayon = "1.8"
+
+# PyTorch Integration for 10x larger user base (optional)
+tch = { version = "0.20.0", optional = true }
+
+# Candle ML Framework Integration (optional)
+candle-core = { version = "0.9", optional = true }
+candle-nn = { version = "0.9", optional = true }
+candle-transformers = { version = "0.9", optional = true }
+safetensors = "0.6"
+
+# Research dependencies (for academic features)
+ndarray = { version = "0.16", optional = true }
+plotters = { version = "0.3", optional = true }
+csv = { version = "1.1", optional = true }
+
+# Real Model Support  
+ort = { version = "2.0.0-rc.10", features = ["load-dynamic"], optional = true }  # ONNX Runtime
+hf-hub = { version = "0.4", features = ["tokio"], optional = true }      # Hugging Face Hub  
+bytes = "1.5"
+tempfile = "3.8"
+
+
+
+# ML Framework dependencies (optional)
+pyo3 = { version = "0.25", optional = true }
+
+# TensorFlow protobuf parsing dependencies (optional)
+prost = { version = "0.14.1", optional = true }
+prost-types = { version = "0.14.1", optional = true }
+
+[dev-dependencies]
+criterion = "0.6"
+
+[[bin]]
+name = "phantom-gpu"
+path = "src/main.rs"
+
+# [[bench]]
+# name = "emulation_benchmarks"
+# harness = false
+
+[package.metadata.docs.rs]
+all-features = true

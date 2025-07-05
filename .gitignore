@@ -1,0 +1,6 @@
+/target
+/models
+/test_models
+/examples/tensorflow_models
+/downloaded_models
+/docs/cmd*

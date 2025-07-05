@@ -1,0 +1,243 @@
+# Real Hardware Performance Profiles for Phantom GPU
+# Detailed characteristics for accurate GPU emulation matching real hardware behavior
+
+[profiles.v100]
+name = "Tesla V100"
+# Thermal characteristics
+thermal.tdp_watts = 300.0
+thermal.base_clock_mhz = 1245.0
+thermal.boost_clock_mhz = 1380.0
+thermal.throttle_temp_celsius = 83.0
+thermal.thermal_factor_sustained = 1.0
+
+# Memory hierarchy
+memory.l1_cache_kb = 128.0
+memory.l2_cache_mb = 6.0
+memory.memory_channels = 4
+memory.cache_hit_ratio = 0.85
+memory.coalescing_efficiency = 0.8
+
+# Architecture details
+architecture.cuda_cores = 5120
+architecture.tensor_cores = 640
+architecture.rt_cores = 0
+architecture.streaming_multiprocessors = 80
+architecture.memory_bus_width = 4096
+
+# Model type performance characteristics
+[profiles.v100.model_performance.cnn]
+batch_scaling_curve = [1.0, 0.85, 0.72, 0.60, 0.50, 0.42, 0.35, 0.30]  # batch sizes 1,2,4,8,16,32,64,128
+memory_efficiency = 0.75
+tensor_core_utilization = 0.65
+architecture_multiplier = 1.25
+
+[profiles.v100.model_performance.transformer]
+batch_scaling_curve = [1.0, 0.82, 0.70, 0.60, 0.50, 0.42, 0.35, 0.28]
+memory_efficiency = 0.70
+tensor_core_utilization = 0.80
+architecture_multiplier = 1.30
+
+[profiles.v100.model_performance.rnn]
+batch_scaling_curve = [1.0, 0.90, 0.80, 0.70, 0.60, 0.50, 0.42, 0.35]
+memory_efficiency = 0.65
+tensor_core_utilization = 0.45
+architecture_multiplier = 1.15
+
+# Precision performance multipliers
+[profiles.v100.precision]
+fp16_multiplier = 1.8
+int8_multiplier = 2.2
+int4_multiplier = 3.0
+
+[profiles.a100]
+name = "A100"
+# Thermal characteristics  
+thermal.tdp_watts = 400.0
+thermal.base_clock_mhz = 1065.0
+thermal.boost_clock_mhz = 1410.0
+thermal.throttle_temp_celsius = 88.0
+thermal.thermal_factor_sustained = 1.17
+
+# Memory hierarchy
+memory.l1_cache_kb = 192.0
+memory.l2_cache_mb = 40.0
+memory.memory_channels = 8
+memory.cache_hit_ratio = 0.90
+memory.coalescing_efficiency = 0.88
+
+# Architecture details
+architecture.cuda_cores = 6912
+architecture.tensor_cores = 432
+architecture.rt_cores = 0
+architecture.streaming_multiprocessors = 108
+architecture.memory_bus_width = 5120
+
+# Model type performance characteristics
+[profiles.a100.model_performance.cnn]
+batch_scaling_curve = [1.0, 0.88, 0.78, 0.68, 0.58, 0.50, 0.43, 0.37]
+memory_efficiency = 0.82
+tensor_core_utilization = 0.75
+architecture_multiplier = 1.35
+
+[profiles.a100.model_performance.transformer]
+batch_scaling_curve = [1.0, 0.85, 0.82, 0.75, 0.70, 0.60, 0.50, 0.45]
+memory_efficiency = 0.78
+tensor_core_utilization = 0.90
+architecture_multiplier = 1.48
+
+[profiles.a100.model_performance.rnn]
+batch_scaling_curve = [1.0, 0.92, 0.85, 0.78, 0.70, 0.62, 0.55, 0.48]
+memory_efficiency = 0.72
+tensor_core_utilization = 0.60
+architecture_multiplier = 1.42
+
+# Precision performance multipliers
+[profiles.a100.precision]
+fp16_multiplier = 2.2
+int8_multiplier = 3.5
+int4_multiplier = 5.5
+
+[profiles.rtx4090]
+name = "RTX 4090"
+# Thermal characteristics - Gaming GPU with aggressive thermal throttling
+thermal.tdp_watts = 450.0
+thermal.base_clock_mhz = 2520.0
+thermal.boost_clock_mhz = 2750.0
+thermal.throttle_temp_celsius = 90.0
+thermal.thermal_factor_sustained = 0.49  # Heavy throttling under sustained ML loads
+
+# Memory hierarchy
+memory.l1_cache_kb = 128.0
+memory.l2_cache_mb = 72.0
+memory.memory_channels = 12
+memory.cache_hit_ratio = 0.88
+memory.coalescing_efficiency = 0.85
+
+# Architecture details
+architecture.cuda_cores = 16384
+architecture.tensor_cores = 512
+architecture.rt_cores = 128
+architecture.streaming_multiprocessors = 128
+architecture.memory_bus_width = 384
+
+# Model type performance characteristics
+[profiles.rtx4090.model_performance.cnn]
+batch_scaling_curve = [1.0, 0.90, 0.82, 0.75, 0.68, 0.62, 0.56, 0.50]
+memory_efficiency = 0.80
+tensor_core_utilization = 0.70
+architecture_multiplier = 1.52
+
+[profiles.rtx4090.model_performance.transformer]
+batch_scaling_curve = [1.0, 0.85, 0.78, 0.70, 0.66, 0.58, 0.50, 0.42]
+memory_efficiency = 0.75
+tensor_core_utilization = 0.82
+architecture_multiplier = 1.45
+
+[profiles.rtx4090.model_performance.rnn]
+batch_scaling_curve = [1.0, 0.88, 0.80, 0.72, 0.65, 0.58, 0.52, 0.46]
+memory_efficiency = 0.70
+tensor_core_utilization = 0.55
+architecture_multiplier = 1.38
+
+# Precision performance multipliers - Gaming GPU excellent at mixed precision
+[profiles.rtx4090.precision]
+fp16_multiplier = 2.4
+int8_multiplier = 4.0
+int4_multiplier = 6.8
+
+[profiles.h100]
+name = "H100"
+# Thermal characteristics - Enterprise GPU with excellent cooling
+thermal.tdp_watts = 700.0
+thermal.base_clock_mhz = 1320.0
+thermal.boost_clock_mhz = 1980.0
+thermal.throttle_temp_celsius = 92.0
+thermal.thermal_factor_sustained = 1.25
+
+# Memory hierarchy - Massive L2 cache
+memory.l1_cache_kb = 256.0
+memory.l2_cache_mb = 50.0
+memory.memory_channels = 10
+memory.cache_hit_ratio = 0.95
+memory.coalescing_efficiency = 0.92
+
+# Architecture details - Hopper architecture optimized for AI
+architecture.cuda_cores = 14592
+architecture.tensor_cores = 456
+architecture.rt_cores = 0
+architecture.streaming_multiprocessors = 114
+architecture.memory_bus_width = 5120
+
+# Model type performance characteristics
+[profiles.h100.model_performance.cnn]
+batch_scaling_curve = [1.0, 0.92, 0.85, 0.78, 0.72, 0.66, 0.60, 0.55]
+memory_efficiency = 0.88
+tensor_core_utilization = 0.85
+architecture_multiplier = 1.65
+
+[profiles.h100.model_performance.transformer]
+batch_scaling_curve = [1.0, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60]
+memory_efficiency = 0.85
+tensor_core_utilization = 0.95
+architecture_multiplier = 1.85
+
+[profiles.h100.model_performance.rnn]
+batch_scaling_curve = [1.0, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65]
+memory_efficiency = 0.80
+tensor_core_utilization = 0.75
+architecture_multiplier = 1.70
+
+# Precision performance multipliers - Hopper excels at mixed precision
+[profiles.h100.precision]
+fp16_multiplier = 2.8
+int8_multiplier = 4.5
+int4_multiplier = 8.0
+
+# Template for adding custom hardware profiles
+[profiles.custom_gpu]
+name = "Custom GPU"
+# Thermal characteristics
+thermal.tdp_watts = 350.0
+thermal.base_clock_mhz = 1500.0
+thermal.boost_clock_mhz = 1800.0
+thermal.throttle_temp_celsius = 85.0
+thermal.thermal_factor_sustained = 1.0
+
+# Memory hierarchy
+memory.l1_cache_kb = 128.0
+memory.l2_cache_mb = 8.0
+memory.memory_channels = 8
+memory.cache_hit_ratio = 0.85
+memory.coalescing_efficiency = 0.80
+
+# Architecture details
+architecture.cuda_cores = 4096
+architecture.tensor_cores = 256
+architecture.rt_cores = 64
+architecture.streaming_multiprocessors = 64
+architecture.memory_bus_width = 256
+
+# Model type performance characteristics
+[profiles.custom_gpu.model_performance.cnn]
+batch_scaling_curve = [1.0, 0.85, 0.72, 0.60, 0.50, 0.42, 0.35, 0.30]
+memory_efficiency = 0.75
+tensor_core_utilization = 0.70
+architecture_multiplier = 1.30
+
+[profiles.custom_gpu.model_performance.transformer]
+batch_scaling_curve = [1.0, 0.82, 0.70, 0.60, 0.50, 0.42, 0.35, 0.28]
+memory_efficiency = 0.70
+tensor_core_utilization = 0.80
+architecture_multiplier = 1.35
+
+[profiles.custom_gpu.model_performance.rnn]
+batch_scaling_curve = [1.0, 0.90, 0.80, 0.70, 0.60, 0.50, 0.42, 0.35]
+memory_efficiency = 0.65
+tensor_core_utilization = 0.50
+architecture_multiplier = 1.20
+
+# Precision performance multipliers
+[profiles.custom_gpu.precision]
+fp16_multiplier = 2.0
+int8_multiplier = 3.0
+int4_multiplier = 4.5 

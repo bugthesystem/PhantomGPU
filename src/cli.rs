@@ -1,0 +1,348 @@
+//! Command-line interface definitions and argument parsing
+
+use clap::{ Parser, Subcommand, ValueEnum };
+use crate::gpu_config::GpuModel;
+
+#[derive(Parser)]
+#[command(name = "phantom-gpu")]
+#[command(about = "🚀 Phantom GPU - Advanced GPU Emulator for ML Workloads")]
+#[command(version = "1.0.0")]
+#[command(author = "Phantom GPU Team")]
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Commands,
+
+    /// Enable verbose logging
+    #[arg(short, long)]
+    pub verbose: bool,
+
+    /// GPU model to emulate
+    #[arg(short, long, value_enum, default_value = "v100")]
+    pub gpu: GpuType,
+}
+
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Train neural networks using Candle framework
+    Train {
+        /// Model architecture to train
+        #[arg(short, long, value_enum, default_value = "cnn")]
+        model: ModelType,
+
+        /// Batch size for training
+        #[arg(short, long, default_value = "32")]
+        batch_size: usize,
+
+        /// Number of epochs
+        #[arg(short, long, default_value = "3")]
+        epochs: usize,
+
+        /// Number of batches per epoch
+        #[arg(long, default_value = "20")]
+        batches: usize,
+    },
+
+    /// Load and benchmark pre-trained models
+    Benchmark {
+        /// Model to benchmark
+        #[arg(short, long, value_enum, default_value = "resnet50")]
+        model: PretrainedModel,
+
+        /// Batch size for inference
+        #[arg(short, long, default_value = "16")]
+        batch_size: usize,
+
+        /// Number of inference runs
+        #[arg(short, long, default_value = "100")]
+        runs: usize,
+    },
+
+    /// Compare performance across multiple GPU models
+    Compare {
+        /// Models to compare
+        #[arg(short, long, value_enum)]
+        gpus: Vec<GpuType>,
+
+        /// Model to test on all GPUs
+        #[arg(short, long, value_enum, default_value = "resnet50")]
+        model: PretrainedModel,
+
+        /// Batch size for comparison
+        #[arg(short, long, default_value = "32")]
+        batch_size: usize,
+    },
+
+    /// Estimate cloud costs for training workloads
+    Cost {
+        /// Model to estimate costs for
+        #[arg(short, long, value_enum, default_value = "resnet50")]
+        model: PretrainedModel,
+
+        /// Training duration in hours
+        #[arg(long, default_value = "24")]
+        hours: f64,
+
+        /// Cloud provider
+        #[arg(short, long, value_enum, default_value = "aws")]
+        provider: CloudProvider,
+    },
+
+    /// Run distributed training simulation
+    Distributed {
+        /// Number of GPUs to simulate
+        #[arg(short, long, default_value = "4")]
+        num_gpus: usize,
+
+        /// Model for distributed training
+        #[arg(short, long, value_enum, default_value = "resnet50")]
+        model: PretrainedModel,
+
+        /// Epochs for distributed training
+        #[arg(short, long, default_value = "5")]
+        epochs: usize,
+    },
+
+    /// Run all benchmark suites
+    Suite {
+        /// Include experimental features
+        #[arg(long)]
+        experimental: bool,
+    },
+
+    /// List available GPU models
+    ListGpus,
+
+    #[cfg(feature = "real-models")]
+    /// Load and benchmark a real model from file or Hub
+    LoadModel {
+        /// Model source (file path or Hugging Face model ID)
+        #[arg(short, long)]
+        model: String,
+
+        /// Model format
+        #[arg(short, long, value_enum, default_value = "auto")]
+        format: ModelFormat,
+
+        /// Batch size for benchmarking
+        #[arg(short, long, default_value = "16")]
+        batch_size: usize,
+
+        /// Number of inference runs
+        #[arg(short, long, default_value = "100")]
+        runs: usize,
+    },
+
+    #[cfg(feature = "pytorch")]
+    /// Compare PyTorch vs Candle performance
+    FrameworkCompare {
+        /// Batch size for comparison
+        #[arg(short, long, default_value = "32")]
+        batch_size: usize,
+    },
+
+    #[cfg(feature = "real-models")]
+    /// Compare multiple models across different GPUs
+    CompareModels {
+        /// Model sources (file paths or Hugging Face model IDs)
+        #[arg(short, long, value_delimiter = ',')]
+        models: Vec<String>,
+
+        /// GPU types to compare
+        #[arg(
+            short,
+            long,
+            value_enum,
+            value_delimiter = ',',
+            default_values = &["rtx4090", "a100", "h100"]
+        )]
+        gpus: Vec<GpuType>,
+
+        /// Batch sizes to test
+        #[arg(short, long, value_delimiter = ',', default_values = &["1", "8", "32"])]
+        batch_sizes: Vec<usize>,
+
+        /// Output format
+        #[arg(short, long, value_enum, default_value = "table")]
+        output: OutputFormat,
+
+        /// Include cost analysis
+        #[arg(long)]
+        include_cost: bool,
+
+        /// Fast mode - instant results for demos (skips realistic timing)
+        #[arg(long)]
+        fast_mode: bool,
+
+        /// Show progress indicators
+        #[arg(long, default_value = "true")]
+        show_progress: bool,
+
+        /// Precision for inference (FP32, FP16, INT8)
+        #[arg(long, value_enum, default_value = "fp32")]
+        precision: Precision,
+
+        /// Use real hardware performance modeling (slower but more accurate)
+        #[arg(long)]
+        real_hardware: bool,
+
+        /// Path to custom hardware profiles TOML file
+        #[arg(long)]
+        hardware_profiles: Option<String>,
+    },
+
+    #[cfg(feature = "real-models")]
+    /// Recommend optimal GPU for a specific model and use case
+    RecommendGpu {
+        /// Model source (file path or Hugging Face model ID)
+        #[arg(short, long)]
+        model: String,
+
+        /// Maximum budget per hour (USD)
+        #[arg(short, long)]
+        budget: Option<f64>,
+
+        /// Target batch size
+        #[arg(long, default_value = "16")]
+        batch_size: usize,
+
+        /// Target throughput (samples/second)
+        #[arg(long)]
+        target_throughput: Option<f64>,
+
+        /// Workload type
+        #[arg(short, long, value_enum, default_value = "inference")]
+        workload: WorkloadType,
+
+        /// Cloud providers to consider
+        #[arg(long, value_enum, value_delimiter = ',', default_values = &["aws", "gcp", "azure"])]
+        cloud_providers: Vec<CloudProvider>,
+
+        /// Fast mode - instant results for demos
+        #[arg(long)]
+        fast_mode: bool,
+    },
+}
+
+#[derive(ValueEnum, Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub enum GpuType {
+    V100,
+    A100,
+    Rtx4090,
+    Rtx3090,
+    T4,
+    Rtx4080,
+    H100,
+    A6000,
+    L40s,
+    Mi300x,
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum ModelType {
+    Cnn,
+    ResNet,
+    Transformer,
+    Gpt,
+    Bert,
+    #[cfg(feature = "pytorch")]
+    /// PyTorch CNN for CIFAR-10
+    PytorchCnn,
+    #[cfg(feature = "pytorch")]
+    /// PyTorch ResNet for ImageNet
+    PytorchResnet,
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum PretrainedModel {
+    ResNet50,
+    BertBase,
+    Gpt2,
+    Llama7b,
+    StableDiffusion,
+    DistilbertReal,
+
+    // Real model support
+    #[cfg(feature = "real-models")]
+    OnnxResnet50,
+    #[cfg(feature = "real-models")]
+    OnnxBert,
+    #[cfg(feature = "real-models")]
+    OnnxGpt2,
+    #[cfg(feature = "real-models")]
+    OnnxMobilenet,
+    #[cfg(feature = "real-models")]
+    HfDistilbert,
+    #[cfg(feature = "real-models")]
+    HfBert,
+    #[cfg(feature = "real-models")]
+    HfGpt2,
+    #[cfg(feature = "real-models")]
+    HfT5Small,
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum CloudProvider {
+    Aws,
+    Gcp,
+    Azure,
+}
+
+#[cfg(feature = "real-models")]
+#[derive(ValueEnum, Clone, Debug)]
+pub enum ModelFormat {
+    Auto,
+    Onnx,
+    PyTorch,
+    HuggingFace,
+    #[cfg(feature = "tensorflow")]
+    TensorFlow,
+}
+
+#[cfg(feature = "real-models")]
+#[derive(ValueEnum, Clone, Debug)]
+pub enum OutputFormat {
+    Table,
+    Json,
+    Csv,
+    Markdown,
+}
+
+#[cfg(feature = "real-models")]
+#[derive(ValueEnum, Clone, Debug)]
+pub enum WorkloadType {
+    Inference,
+    Training,
+    BatchProcessing,
+    RealTime,
+}
+
+#[cfg(feature = "real-models")]
+#[derive(ValueEnum, Clone, Debug, Copy)]
+pub enum Precision {
+    FP32,
+    FP16,
+    INT8,
+}
+
+#[cfg(feature = "real-models")]
+impl Precision {
+    pub fn to_real_hardware_precision(&self) -> crate::real_hardware_model::Precision {
+        match self {
+            Precision::FP32 => crate::real_hardware_model::Precision::FP32,
+            Precision::FP16 => crate::real_hardware_model::Precision::FP16,
+            Precision::INT8 => crate::real_hardware_model::Precision::INT8,
+        }
+    }
+}
+
+impl GpuType {
+    pub fn to_gpu_model(&self) -> GpuModel {
+        let gpu_manager = crate::gpu_config::GpuModelManager
+            ::load()
+            .expect("Failed to load GPU configuration");
+
+        gpu_manager
+            .get_gpu_by_type(self)
+            .expect(&format!("GPU type {:?} not found in configuration", self))
+    }
+}
