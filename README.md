@@ -2,13 +2,13 @@
 
 **Test ML models on any GPU before you buy it**
 
-PhantomGPU is a high-performance GPU emulator that lets you benchmark ML models on virtual GPUs with real hardware accuracy. Compare performance across different GPUs, optimize your model deployment, and estimate costs—all without access to physical hardware.
+PhantomGPU is a high-performance GPU emulator that lets you benchmark ML models on virtual GPUs with real hardware accuracy. Compare performance across different GPUs, optimize your model deployment, and estimate costs, all without access to physical hardware.
 
 ## The Problem
 
 - **Expensive Hardware**: Can't afford to buy every GPU to test your models
 - **Cloud Costs**: Unpredictable pricing makes it hard to budget ML workloads  
-- **Performance Uncertainty**: No way to know if your model will run efficiently on different hardware
+- **Performance Uncertainty**: Hard to know if your model will run efficiently on different hardware
 - **Deployment Decisions**: Choosing the right GPU for production is guesswork
 
 ## The Solution
