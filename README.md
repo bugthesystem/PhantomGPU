@@ -1,4 +1,4 @@
-# PhantomGPU 👻
+# PhantomGPU 🚀
 
 **Test ML models on any GPU before you buy it**
 
