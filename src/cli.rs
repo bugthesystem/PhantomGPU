@@ -229,12 +229,12 @@ pub enum GpuType {
     A100,
     Rtx4090,
     Rtx3090,
-    T4,
-    Rtx4080,
     H100,
+    H200,
     A6000,
     L40s,
-    Mi300x,
+    Rtx5090,
+    RtxPro6000,
 }
 
 #[derive(ValueEnum, Clone, Debug)]

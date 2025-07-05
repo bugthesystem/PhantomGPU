@@ -144,12 +144,12 @@ gpu = "v100"
             crate::cli::GpuType::A100 => "a100",
             crate::cli::GpuType::Rtx4090 => "rtx4090",
             crate::cli::GpuType::Rtx3090 => "rtx3090",
-            crate::cli::GpuType::T4 => "t4",
-            crate::cli::GpuType::Rtx4080 => "rtx4080",
             crate::cli::GpuType::H100 => "h100",
+            crate::cli::GpuType::H200 => "h200",
             crate::cli::GpuType::A6000 => "a6000",
             crate::cli::GpuType::L40s => "l40s",
-            crate::cli::GpuType::Mi300x => "mi300x",
+            crate::cli::GpuType::Rtx5090 => "rtx5090",
+            crate::cli::GpuType::RtxPro6000 => "rtx_pro_6000",
         };
 
         self.get_gpu(key).cloned()
