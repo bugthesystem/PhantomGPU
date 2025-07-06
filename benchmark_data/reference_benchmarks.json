@@ -1,0 +1,152 @@
+[
+  {
+    "gpu_name": "Tesla V100",
+    "gpu_architecture": "Volta",
+    "model_name": "ResNet-50",
+    "model_type": "CNN",
+    "batch_sizes": [1, 8, 16, 32, 64],
+    "measurements": [
+      {
+        "batch_size": 1,
+        "precision": "FP32",
+        "inference_time_ms": 1.4,
+        "memory_usage_mb": 200.0,
+        "throughput_samples_per_sec": 714.0,
+        "gpu_utilization_percent": 65.0,
+        "power_usage_watts": 250.0,
+        "temperature_celsius": 75.0,
+        "runs": 1000,
+        "std_dev_ms": 0.05
+      },
+      {
+        "batch_size": 8,
+        "precision": "FP32",
+        "inference_time_ms": 8.2,
+        "memory_usage_mb": 850.0,
+        "throughput_samples_per_sec": 975.0,
+        "gpu_utilization_percent": 85.0,
+        "power_usage_watts": 280.0,
+        "temperature_celsius": 78.0,
+        "runs": 1000,
+        "std_dev_ms": 0.15
+      },
+      {
+        "batch_size": 16,
+        "precision": "FP32",
+        "inference_time_ms": 15.8,
+        "memory_usage_mb": 1650.0,
+        "throughput_samples_per_sec": 1013.0,
+        "gpu_utilization_percent": 92.0,
+        "power_usage_watts": 295.0,
+        "temperature_celsius": 80.0,
+        "runs": 1000,
+        "std_dev_ms": 0.25
+      }
+    ],
+    "system_info": {
+      "driver_version": "460.32.03",
+      "cuda_version": "11.2",
+      "cpu_model": "Intel Xeon Silver 4216",
+      "memory_gb": 64.0,
+      "pcie_generation": "PCIe 3.0"
+    },
+    "timestamp": "2024-01-15T10:30:00Z",
+    "source": "MLPerf Inference v1.1"
+  },
+  {
+    "gpu_name": "A100",
+    "gpu_architecture": "Ampere",
+    "model_name": "BERT-Base",
+    "model_type": "Transformer",
+    "batch_sizes": [1, 8, 16, 32, 64],
+    "measurements": [
+      {
+        "batch_size": 1,
+        "precision": "FP32",
+        "inference_time_ms": 2.8,
+        "memory_usage_mb": 450.0,
+        "throughput_samples_per_sec": 357.0,
+        "gpu_utilization_percent": 78.0,
+        "power_usage_watts": 220.0,
+        "temperature_celsius": 65.0,
+        "runs": 1000,
+        "std_dev_ms": 0.08
+      },
+      {
+        "batch_size": 8,
+        "precision": "FP32",
+        "inference_time_ms": 18.5,
+        "memory_usage_mb": 2100.0,
+        "throughput_samples_per_sec": 432.0,
+        "gpu_utilization_percent": 88.0,
+        "power_usage_watts": 265.0,
+        "temperature_celsius": 70.0,
+        "runs": 1000,
+        "std_dev_ms": 0.22
+      },
+      {
+        "batch_size": 16,
+        "precision": "FP16",
+        "inference_time_ms": 24.2,
+        "memory_usage_mb": 3200.0,
+        "throughput_samples_per_sec": 661.0,
+        "gpu_utilization_percent": 94.0,
+        "power_usage_watts": 285.0,
+        "temperature_celsius": 72.0,
+        "runs": 1000,
+        "std_dev_ms": 0.35
+      }
+    ],
+    "system_info": {
+      "driver_version": "470.57.02",
+      "cuda_version": "11.4",
+      "cpu_model": "AMD EPYC 7742",
+      "memory_gb": 128.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-02-10T14:20:00Z",
+    "source": "NVIDIA Technical Blog"
+  },
+  {
+    "gpu_name": "RTX 4090",
+    "gpu_architecture": "Ada Lovelace",
+    "model_name": "Stable Diffusion",
+    "model_type": "GAN",
+    "batch_sizes": [1, 4, 8],
+    "measurements": [
+      {
+        "batch_size": 1,
+        "precision": "FP16",
+        "inference_time_ms": 1250.0,
+        "memory_usage_mb": 8500.0,
+        "throughput_samples_per_sec": 0.8,
+        "gpu_utilization_percent": 98.0,
+        "power_usage_watts": 420.0,
+        "temperature_celsius": 75.0,
+        "runs": 100,
+        "std_dev_ms": 25.0
+      },
+      {
+        "batch_size": 4,
+        "precision": "FP16",
+        "inference_time_ms": 4800.0,
+        "memory_usage_mb": 18500.0,
+        "throughput_samples_per_sec": 0.83,
+        "gpu_utilization_percent": 99.0,
+        "power_usage_watts": 435.0,
+        "temperature_celsius": 78.0,
+        "runs": 100,
+        "std_dev_ms": 85.0
+      }
+    ],
+    "system_info": {
+      "driver_version": "522.25",
+      "cuda_version": "11.8",
+      "cpu_model": "Intel Core i9-13900K",
+      "memory_gb": 32.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-03-05T09:45:00Z",
+    "source": "Community Benchmarks"
+  }
+] 

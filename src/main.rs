@@ -35,6 +35,9 @@ pub mod real_hardware_model;
 #[cfg(feature = "real-models")]
 pub mod real_hardware_config;
 
+#[cfg(feature = "real-models")]
+pub mod benchmark_validation;
+
 #[cfg(feature = "tensorflow")]
 pub mod tensorflow_parser;
 
@@ -226,6 +229,25 @@ async fn run() -> PhantomResult<()> {
                 cloud_providers,
                 *fast_mode
             ).await?;
+        }
+
+        #[cfg(feature = "real-models")]
+        Commands::Validate { gpu, benchmark_data, verbose } => {
+            println!("\n{}", "🎯 Validating PhantomGPU Accuracy".cyan().bold());
+            commands::handle_validate_command(
+                gpu.as_deref(),
+                benchmark_data.as_deref(),
+                *verbose
+            ).await?;
+        }
+
+        #[cfg(feature = "real-models")]
+        Commands::Calibrate { gpu, benchmark_data, output } => {
+            println!(
+                "\n{}",
+                format!("🔧 Calibrating {} Performance Model", gpu.yellow()).cyan().bold()
+            );
+            commands::handle_calibrate_command(gpu, benchmark_data, output.as_deref()).await?;
         }
 
         #[cfg(feature = "pytorch")]

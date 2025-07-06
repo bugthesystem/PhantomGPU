@@ -121,6 +121,38 @@ pub enum Commands {
     },
 
     #[cfg(feature = "real-models")]
+    /// Validate PhantomGPU accuracy against real hardware benchmarks
+    Validate {
+        /// GPU to validate (e.g., "v100", "a100", "rtx4090")
+        #[arg(long)]
+        gpu: Option<String>,
+
+        /// Path to custom benchmark data file
+        #[arg(long)]
+        benchmark_data: Option<String>,
+
+        /// Show detailed validation report
+        #[arg(long)]
+        verbose: bool,
+    },
+
+    #[cfg(feature = "real-models")]
+    /// Calibrate performance models using real benchmark data
+    Calibrate {
+        /// GPU to calibrate
+        #[arg(long)]
+        gpu: String,
+
+        /// Path to benchmark data file
+        #[arg(long)]
+        benchmark_data: String,
+
+        /// Output path for calibrated model
+        #[arg(long)]
+        output: Option<String>,
+    },
+
+    #[cfg(feature = "real-models")]
     /// Load and benchmark a real model from file or Hub
     LoadModel {
         /// Model source (file path or Hugging Face model ID)
