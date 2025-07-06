@@ -350,7 +350,7 @@ impl CalibrationEngine {
             ModelType::CNN => 4.1e9, // ResNet-50: ~4.1 GFLOPs - verified from MLPerf
             ModelType::Transformer => 22.5e9, // BERT-Base: ~22.5 GFLOPs - much higher than previous estimate
             ModelType::RNN => 2.0e9, // LSTM typical
-            ModelType::GAN => 480e9, // Stable Diffusion: ~480 GFLOPs - much higher complexity
+            ModelType::GAN => 43e12, // Stable Diffusion: ~43 TFLOPs - MUCH higher complexity (was 480 GFLOPs)
             ModelType::Other(_) => 10e9, // Conservative estimate, increased from 3e9
         };
 
@@ -410,57 +410,119 @@ impl CalibrationEngine {
         // - Ensure physical constraints are maintained
     }
 
-    /// Validate predictions against known results
+    /// Validate predictions against known results with Leave-One-Out Cross-Validation
     pub fn validate_predictions(&mut self, gpu_name: &str) -> Result<f64, PhantomGpuError> {
-        // Auto-calibrate the GPU model if not already calibrated
-        if !self.calibration_factors.contains_key(gpu_name) {
-            println!("🔧 Auto-calibrating {} before validation...", gpu_name);
-            self.calibrate_gpu_model(gpu_name)?;
-        }
-
         let real_benchmarks = self.real_data
             .get(gpu_name)
             .ok_or_else(|| PhantomGpuError::ConfigError {
                 message: format!("No validation data for GPU: {}", gpu_name),
-            })?;
+            })?
+            .clone();
 
-        let mut total_error = 0.0;
-        let mut count = 0;
-
-        println!("🔍 Debugging {} predictions:", gpu_name);
-
-        for benchmark in real_benchmarks {
+        // Collect all measurements for cross-validation
+        let mut all_measurements = Vec::new();
+        for benchmark in &real_benchmarks {
             for measurement in &benchmark.measurements {
-                let predicted = self.predict_calibrated_time(
-                    gpu_name,
-                    &benchmark.model_name,
-                    measurement.batch_size,
-                    &measurement.precision,
-                    &benchmark.model_type
-                )?;
-
-                let real_time = measurement.inference_time_ms;
-                let error = ((predicted - real_time).abs() / real_time) * 100.0;
-
-                println!(
-                    "  Model: {}, Batch: {}, Precision: {:?}",
-                    benchmark.model_name,
-                    measurement.batch_size,
-                    measurement.precision
-                );
-                println!(
-                    "    Real: {:.2}ms, Predicted: {:.2}ms, Error: {:.1}%",
-                    real_time,
-                    predicted,
-                    error
-                );
-
-                total_error += error;
-                count += 1;
+                all_measurements.push((benchmark, measurement));
             }
         }
 
+        if all_measurements.is_empty() {
+            return Err(PhantomGpuError::ConfigError {
+                message: format!("No measurement data available for GPU: {}", gpu_name),
+            });
+        }
+
+        println!(
+            "🔧 Using Leave-One-Out Cross-Validation with {} data points",
+            all_measurements.len()
+        );
+
+        let mut total_error = 0.0;
+        let mut count = 0;
+        let mut individual_errors = Vec::new();
+
+        // Leave-One-Out Cross-Validation
+        for i in 0..all_measurements.len() {
+            // Create training set (all except i-th element)
+            let train_data: Vec<_> = all_measurements
+                .iter()
+                .enumerate()
+                .filter(|(idx, _)| *idx != i)
+                .map(|(_, item)| *item)
+                .collect();
+
+            // Test on i-th element
+            let test_data = all_measurements[i];
+
+            println!(
+                "🔄 Fold {}/{}: Training on {} points, testing on 1 point",
+                i + 1,
+                all_measurements.len(),
+                train_data.len()
+            );
+
+            // Clear previous calibration and train on current fold
+            self.calibration_factors.remove(gpu_name);
+            self.calibrate_gpu_model_with_data(gpu_name, &train_data)?;
+
+            // Test on held-out data point
+            let predicted = self.predict_calibrated_time(
+                gpu_name,
+                &test_data.0.model_name,
+                test_data.1.batch_size,
+                &test_data.1.precision,
+                &test_data.0.model_type
+            )?;
+
+            let real_time = test_data.1.inference_time_ms;
+            let error = ((predicted - real_time).abs() / real_time) * 100.0;
+
+            println!(
+                "  📊 Fold {}: Model={}, Batch={}, Precision={:?}",
+                i + 1,
+                test_data.0.model_name,
+                test_data.1.batch_size,
+                test_data.1.precision
+            );
+            println!(
+                "    Real: {:.2}ms, Predicted: {:.2}ms, Error: {:.1}%",
+                real_time,
+                predicted,
+                error
+            );
+
+            individual_errors.push(error);
+            total_error += error;
+            count += 1;
+        }
+
+        if count == 0 {
+            return Err(PhantomGpuError::ConfigError {
+                message: "No validation completed".to_string(),
+            });
+        }
+
         let avg_error = total_error / (count as f64);
+
+        // Calculate standard deviation of errors
+        let variance =
+            individual_errors
+                .iter()
+                .map(|e| (e - avg_error).powi(2))
+                .sum::<f64>() / (count as f64);
+        let std_dev = variance.sqrt();
+
+        println!("📊 Cross-Validation Results:");
+        println!("  • Average Error: {:.1}% (±{:.1}% std dev)", avg_error, std_dev);
+        println!(
+            "  • Individual Errors: {:?}",
+            individual_errors
+                .iter()
+                .map(|e| format!("{:.1}%", e))
+                .collect::<Vec<_>>()
+        );
+
         self.validation_errors.insert(gpu_name.to_string(), avg_error);
 
         Ok(avg_error)
@@ -520,6 +582,129 @@ impl CalibrationEngine {
         );
 
         Ok(calibrated_time)
+    }
+
+    /// Calibrate using specific training data subset
+    fn calibrate_gpu_model_with_data(
+        &mut self,
+        gpu_name: &str,
+        train_data: &[(&RealBenchmarkData, &BenchmarkMeasurement)]
+    ) -> Result<(), PhantomGpuError> {
+        let mut calibration = CalibrationFactors {
+            base_performance_multiplier: 1.0,
+            batch_scaling_corrections: HashMap::new(),
+            memory_efficiency_factor: 1.0,
+            thermal_throttling_factor: 1.0,
+            precision_multipliers: HashMap::new(),
+            model_type_factors: HashMap::new(),
+        };
+
+        let mut total_correction_factor = 0.0;
+        let mut count = 0;
+        let mut batch_factors: HashMap<usize, Vec<f64>> = HashMap::new();
+        let mut precision_factors: HashMap<Precision, Vec<f64>> = HashMap::new();
+        let mut model_type_factors: HashMap<ModelType, Vec<f64>> = HashMap::new();
+
+        // Analyze training data only
+        for (benchmark, measurement) in train_data {
+            let predicted_time = self.predict_uncalibrated_time(
+                &benchmark.gpu_name,
+                &benchmark.model_name,
+                measurement.batch_size,
+                &measurement.precision,
+                &benchmark.model_type
+            );
+
+            if let Ok(predicted) = predicted_time {
+                let correction_factor = measurement.inference_time_ms / predicted;
+
+                println!(
+                    "    [TRAIN] {}: Real={:.2}ms, Pred={:.2}ms, Factor={:.2}",
+                    benchmark.model_name,
+                    measurement.inference_time_ms,
+                    predicted,
+                    correction_factor
+                );
+
+                // Accumulate for base multiplier (average correction)
+                total_correction_factor += correction_factor;
+                count += 1;
+
+                // Collect batch-specific factors
+                batch_factors
+                    .entry(measurement.batch_size)
+                    .or_insert_with(Vec::new)
+                    .push(correction_factor);
+
+                // Collect precision-specific factors
+                precision_factors
+                    .entry(measurement.precision.clone())
+                    .or_insert_with(Vec::new)
+                    .push(correction_factor);
+
+                // Collect model-type-specific factors
+                model_type_factors
+                    .entry(benchmark.model_type.clone())
+                    .or_insert_with(Vec::new)
+                    .push(correction_factor);
+            }
+        }
+
+        // Calculate base multiplier
+        if count > 0 {
+            calibration.base_performance_multiplier = total_correction_factor / (count as f64);
+        }
+
+        // Calculate batch scaling corrections (relative to base multiplier)
+        for (batch_size, factors) in batch_factors {
+            let avg_factor = factors.iter().sum::<f64>() / (factors.len() as f64);
+            let relative_factor = avg_factor / calibration.base_performance_multiplier;
+
+            // Only apply reasonable corrections (0.5x to 2.0x)
+            if relative_factor > 0.5 && relative_factor < 2.0 {
+                calibration.batch_scaling_corrections.insert(batch_size, relative_factor);
+                println!("    [TRAIN] Batch {} correction: {:.2}x", batch_size, relative_factor);
+            }
+        }
+
+        // Calculate precision multipliers (relative to base multiplier)
+        for (precision, factors) in precision_factors {
+            let avg_factor = factors.iter().sum::<f64>() / (factors.len() as f64);
+            let relative_factor = avg_factor / calibration.base_performance_multiplier;
+
+            // Only apply reasonable corrections (0.5x to 2.0x)
+            if relative_factor > 0.5 && relative_factor < 2.0 {
+                println!(
+                    "    [TRAIN] Precision {:?} correction: {:.2}x",
+                    precision,
+                    relative_factor
+                );
+                calibration.precision_multipliers.insert(precision, relative_factor);
+            }
+        }
+
+        // Calculate model type factors (relative to base multiplier)
+        for (model_type, factors) in model_type_factors {
+            let avg_factor = factors.iter().sum::<f64>() / (factors.len() as f64);
+            let relative_factor = avg_factor / calibration.base_performance_multiplier;
+
+            // Only apply reasonable corrections (0.5x to 2.0x)
+            if relative_factor > 0.5 && relative_factor < 2.0 {
+                println!(
+                    "    [TRAIN] Model type {:?} correction: {:.2}x",
+                    model_type,
+                    relative_factor
+                );
+                calibration.model_type_factors.insert(model_type, relative_factor);
+            }
+        }
+
+        println!("    [TRAIN] Base multiplier: {:.2}", calibration.base_performance_multiplier);
+
+        // Store calibration factors
+        self.calibration_factors.insert(gpu_name.to_string(), calibration);
+
+        Ok(())
     }
 
     /// Generate accuracy report
