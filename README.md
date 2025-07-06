@@ -249,6 +249,77 @@ PhantomGPU includes performance profiles for the top 10 most relevant GPUs for M
 | 9 | **RTX 3090** | 24GB GDDR6X | Ampere | In Development |
 | 10 | **V100** | 32GB HBM2 | Volta | **✅ 98.7% Accuracy** |
 
+### **Supported Models**
+PhantomGPU supports **30+ cutting-edge AI models** across all major categories for comprehensive ML performance testing:
+
+#### **🧠 Large Language Models**
+| Model | Parameters | Memory (FP16) | FLOPS | Use Case |
+|-------|------------|---------------|--------|----------|
+| **GPT-3.5 Turbo** | 175B | 350GB | 180 GFLOPs | Chat, text generation |
+| **LLaMA 2 7B** | 7B | 14GB | 35 GFLOPs | Efficient text generation |
+| **LLaMA 2 13B** | 13B | 26GB | 68 GFLOPs | Balanced quality/efficiency |
+| **LLaMA 2 70B** | 70B | 140GB | 380 GFLOPs | High-quality text generation |
+| **Code Llama 7B** | 7B | 14GB | 38 GFLOPs | Code generation |
+| **Code Llama 13B** | 13B | 26GB | 72 GFLOPs | Advanced code analysis |
+| **Code Llama 34B** | 34B | 68GB | 185 GFLOPs | Professional code generation |
+
+#### **👁️ Vision Transformers**
+| Model | Parameters | Memory (FP16) | FLOPS | Use Case |
+|-------|------------|---------------|--------|----------|
+| **ViT-Base/16** | 86M | 350MB | 55 GFLOPs | Image classification |
+| **ViT-Large/16** | 307M | 1.2GB | 190 GFLOPs | High-accuracy classification |
+| **ViT-Huge/14** | 632M | 2.5GB | 380 GFLOPs | State-of-the-art classification |
+| **DeiT-Base** | 86M | 350MB | 52 GFLOPs | Efficient image classification |
+| **DeiT-Large** | 307M | 1.2GB | 185 GFLOPs | Large efficient transformer |
+| **CLIP ViT-B/32** | 151M | 600MB | 43 GFLOPs | Vision-language tasks |
+| **CLIP ViT-B/16** | 151M | 600MB | 58 GFLOPs | High-res vision-language |
+| **CLIP ViT-L/14** | 428M | 1.7GB | 270 GFLOPs | Large vision-language |
+
+#### **🎯 Modern Object Detection**
+| Model | Parameters | Memory (FP16) | FLOPS | Use Case |
+|-------|------------|---------------|--------|----------|
+| **YOLOv9** | 51M | 1.8GB | 168 GFLOPs | State-of-the-art detection |
+| **YOLOv10** | 28M | 1.2GB | 145 GFLOPs | Efficient real-time detection |
+| **DETR** | 41M | 1.6GB | 125 GFLOPs | End-to-end detection |
+| **RT-DETR** | 20M | 800MB | 92 GFLOPs | Real-time transformer detection |
+| **YOLOv8n** | 3.2M | 120MB | 8.7 GFLOPs | Edge/mobile deployment |
+| **YOLOv8s** | 11.2M | 400MB | 28.6 GFLOPs | Small balanced model |
+| **YOLOv8m** | 25.9M | 950MB | 78.9 GFLOPs | Medium balanced model |
+| **YOLOv8l** | 43.7M | 1.65GB | 165.2 GFLOPs | Large high-accuracy model |
+| **YOLOv8x** | 68.2M | 2.58GB | 257.8 GFLOPs | Extra large maximum accuracy |
+
+#### **🎨 Generative Models**
+| Model | Parameters | Memory (FP16) | FLOPS | Use Case |
+|-------|------------|---------------|--------|----------|
+| **Stable Diffusion** | 860M | 8.5GB | 43 TFLOPs | Text-to-image generation |
+| **Stable Diffusion XL** | 3.5B | 11.2GB | 98 TFLOPs | High-quality image generation |
+
+#### **📚 Legacy Models (For Compatibility)**
+| Model | Parameters | Memory (FP16) | FLOPS | Use Case |
+|-------|------------|---------------|--------|----------|
+| **ResNet-50** | 25.6M | 200MB | 9.2 GFLOPs | Image classification |
+| **BERT-Base** | 110M | 450MB | 28.5 GFLOPs | Text understanding |
+| **GPT-2** | 117M | 450MB | 22 GFLOPs | Text generation |
+| **YOLO v8** | 3.2M | 1.2GB | 142 GFLOPs | Object detection |
+
+#### **🔧 Model Testing Commands**
+```bash
+# Test different model categories
+./target/release/phantom-gpu benchmark --model llama2-7b --batch-size 8
+./target/release/phantom-gpu benchmark --model vit-base-16 --batch-size 32  
+./target/release/phantom-gpu benchmark --model yolov10 --batch-size 4
+./target/release/phantom-gpu benchmark --model stable-diffusion-xl --batch-size 1
+
+# Compare models across GPUs
+./target/release/phantom-gpu compare-models \
+  --models "llama2-7b,vit-base-16,yolov10" \
+  --gpus "v100,a100,rtx4090" \
+  --batch-sizes "1,8,16"
+
+# See all available models
+./target/release/phantom-gpu benchmark --help | grep "possible values"
+```
+
 ### **Analysis & Optimization**
 - **Performance Comparison**: Side-by-side GPU benchmarks
 - **Cost Estimation**: Real-time cloud pricing and ROI analysis
