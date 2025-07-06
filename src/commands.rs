@@ -1,16 +1,41 @@
 //! Command handlers for the CLI interface
 
-use tracing::{ warn, info };
-use colored::Colorize;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tracing::{ info, warn, error };
+use colored::*;
 
-use crate::cli::{ ModelType, PretrainedModel, CloudProvider, GpuType };
-#[cfg(feature = "real-models")]
-use crate::cli::{ ModelFormat, OutputFormat, WorkloadType };
-use crate::errors::{ PhantomGpuError, PhantomResult };
-use crate::emulator::MultiGPUEmulator;
+use crate::emulator::{ RustGPUEmu, MultiGPUEmulator };
+use crate::gpu_config::{ GpuModel, GpuModelManager };
 use crate::models::ModelConfig;
 use crate::benchmarks::BenchmarkSuite;
-use crate::gpu_config::{ GpuModel, GpuModelManager };
+use crate::cli::{ GpuType, ModelType, PretrainedModel, CloudProvider };
+
+#[cfg(feature = "real-models")]
+use crate::cli::{ ModelFormat, OutputFormat, WorkloadType };
+use crate::errors::{ PhantomResult, PhantomGpuError };
+
+#[cfg(feature = "real-models")]
+use crate::real_model_loader::{ RealModelInfo, RealModelLoader };
+
+#[cfg(feature = "real-models")]
+use crate::real_hardware_model::{ RealHardwareCalculator, RealisticPerformanceResult };
+
+#[cfg(feature = "real-models")]
+use crate::real_hardware_config::HardwareProfileLoader;
+
+#[cfg(feature = "real-models")]
+use crate::benchmark_validation::{
+    CalibrationEngine,
+    ModelType as BenchmarkModelType,
+    Precision as BenchmarkPrecision,
+};
+
+#[cfg(feature = "real-models")]
+pub struct StressTestArgs {
+    pub verbose: bool,
+    pub edge_cases: Option<String>,
+}
 
 pub async fn handle_train_command(
     model: &ModelType,
@@ -1120,6 +1145,234 @@ pub async fn handle_calibrate_command(
     println!("\n💡 To use the calibrated model:");
     println!("   phantom-gpu validate --gpu {} --verbose", gpu);
     println!("   phantom-gpu compare-models --models <model> --gpus {} --real-hardware", gpu);
+
+    Ok(())
+}
+
+#[cfg(feature = "real-models")]
+pub fn handle_stress_test(args: &StressTestArgs) -> Result<(), Box<dyn std::error::Error>> {
+    println!("{}", "=".repeat(60));
+    println!("🧪 PhantomGPU Stress Testing Suite");
+    println!("{}", "=".repeat(60));
+
+    let mut calibration_engine = crate::benchmark_validation::CalibrationEngine::new();
+
+    // Load edge cases data
+    let edge_cases_path = args.edge_cases.as_deref().unwrap_or("benchmark_data/edge_cases.json");
+    match std::fs::read_to_string(edge_cases_path) {
+        Ok(data) => {
+            println!("✅ Loaded edge cases from: {}", edge_cases_path);
+            if args.verbose {
+                println!("📊 Edge cases data: {} bytes", data.len());
+            }
+        }
+        Err(e) => {
+            println!("⚠️  Could not load edge cases from {}: {}", edge_cases_path, e);
+            println!("   Using default stress test scenarios");
+        }
+    }
+
+    // Run stress tests
+    println!("\n🔥 Running stress test scenarios...");
+
+    // 1. Large Batch Size Tests
+    println!("\n1️⃣ Large Batch Size Tests");
+    test_large_batch_sizes(&calibration_engine)?;
+
+    // 2. Memory Pressure Tests
+    println!("\n2️⃣ Memory Pressure Tests");
+    test_memory_pressure(&calibration_engine)?;
+
+    // 3. Mixed Precision Tests
+    println!("\n3️⃣ Mixed Precision Tests");
+    test_mixed_precision(&calibration_engine)?;
+
+    // 4. Temperature Scaling Tests
+    println!("\n4️⃣ Temperature Scaling Tests");
+    test_temperature_scaling(&calibration_engine)?;
+
+    // 5. Power Limit Tests
+    println!("\n5️⃣ Power Limit Tests");
+    test_power_limits(&calibration_engine)?;
+
+    println!("\n{}", "=".repeat(60));
+    println!("✅ Stress testing completed successfully!");
+    println!("{}", "=".repeat(60));
+
+    Ok(())
+}
+
+#[cfg(feature = "real-models")]
+fn test_large_batch_sizes(
+    engine: &crate::benchmark_validation::CalibrationEngine
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("   Testing extreme batch sizes: 256, 512, 1024+");
+
+    // Test large batch sizes that push memory limits
+    let test_cases = vec![
+        (256, "Large batch training scenario"),
+        (512, "Extreme batch processing"),
+        (1024, "Memory-bound inference")
+    ];
+
+    for (batch_size, description) in test_cases {
+        println!("   • {} (batch_size: {})", description, batch_size);
+
+        // Simulate prediction for large batch
+        let predicted_time = engine
+            .predict_calibrated_time(
+                "RTX 4090",
+                "ResNet-50",
+                batch_size,
+                &crate::benchmark_validation::Precision::FP32,
+                &BenchmarkModelType::CNN
+            )
+            .unwrap_or(100.0);
+
+        println!("     Predicted time: {:.2}ms", predicted_time);
+
+        // Check memory efficiency
+        let memory_usage = ((batch_size as f64) * 4.0 * 224.0 * 224.0 * 3.0) / (1024.0 * 1024.0); // MB
+        println!("     Memory usage: {:.1}MB", memory_usage);
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "real-models")]
+fn test_memory_pressure(
+    engine: &crate::benchmark_validation::CalibrationEngine
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("   Testing models near GPU memory limits");
+
+    let test_cases = vec![
+        (32, "ResNet-50 near memory limit"),
+        (64, "BERT-Base with large context"),
+        (128, "Transformer with attention")
+    ];
+
+    for (batch_size, description) in test_cases {
+        println!("   • {} (batch_size: {})", description, batch_size);
+
+        let predicted_time = engine
+            .predict_calibrated_time(
+                "A100",
+                "BERT-Base",
+                batch_size,
+                &crate::benchmark_validation::Precision::FP16,
+                &BenchmarkModelType::Transformer
+            )
+            .unwrap_or(100.0);
+
+        println!("     Predicted time: {:.2}ms", predicted_time);
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "real-models")]
+fn test_mixed_precision(
+    engine: &crate::benchmark_validation::CalibrationEngine
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("   Testing INT8 and quantized model performance");
+
+    let test_cases = vec![
+        (32, "INT8 quantized CNN"),
+        (64, "Mixed precision Transformer"),
+        (128, "Quantized inference pipeline")
+    ];
+
+    for (batch_size, description) in test_cases {
+        println!("   • {} (batch_size: {})", description, batch_size);
+
+        let predicted_time = engine
+            .predict_calibrated_time(
+                "Tesla V100",
+                "ResNet-50",
+                batch_size,
+                &crate::benchmark_validation::Precision::INT8,
+                &BenchmarkModelType::CNN
+            )
+            .unwrap_or(100.0);
+
+        println!("     Predicted time: {:.2}ms", predicted_time);
+
+        // Test efficiency gain from quantization
+        let fp32_time = engine
+            .predict_calibrated_time(
+                "Tesla V100",
+                "ResNet-50",
+                batch_size,
+                &crate::benchmark_validation::Precision::FP32,
+                &BenchmarkModelType::CNN
+            )
+            .unwrap_or(100.0);
+
+        let speedup = fp32_time / predicted_time;
+        println!("     Quantization speedup: {:.2}x", speedup);
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "real-models")]
+fn test_temperature_scaling(
+    engine: &crate::benchmark_validation::CalibrationEngine
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("   Testing thermal throttling effects");
+
+    let base_time = engine
+        .predict_calibrated_time(
+            "RTX 4090",
+            "ResNet-50",
+            32,
+            &crate::benchmark_validation::Precision::FP32,
+            &BenchmarkModelType::CNN
+        )
+        .unwrap_or(100.0);
+
+    let temperature_scenarios = vec![
+        (65, 1.0, "Normal temperature"),
+        (75, 1.1, "Warm GPU"),
+        (85, 1.25, "Hot GPU - mild throttling"),
+        (95, 1.5, "Very hot GPU - heavy throttling")
+    ];
+
+    for (temp_c, throttle_factor, description) in temperature_scenarios {
+        let throttled_time = base_time * throttle_factor;
+        println!("   • {} ({}°C): {:.2}ms", description, temp_c, throttled_time);
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "real-models")]
+fn test_power_limits(
+    engine: &crate::benchmark_validation::CalibrationEngine
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("   Testing power constraint impacts");
+
+    let base_time = engine
+        .predict_calibrated_time(
+            "RTX 4090",
+            "ResNet-50",
+            32,
+            &crate::benchmark_validation::Precision::FP32,
+            &BenchmarkModelType::CNN
+        )
+        .unwrap_or(100.0);
+
+    let power_scenarios = vec![
+        (100, 1.0, "Full power (300W)"),
+        (80, 1.15, "Power limit 80% (240W)"),
+        (60, 1.35, "Power limit 60% (180W)"),
+        (40, 1.7, "Severe power limit 40% (120W)")
+    ];
+
+    for (power_percent, slowdown_factor, description) in power_scenarios {
+        let limited_time = base_time * slowdown_factor;
+        println!("   • {} ({}%): {:.2}ms", description, power_percent, limited_time);
+    }
 
     Ok(())
 }

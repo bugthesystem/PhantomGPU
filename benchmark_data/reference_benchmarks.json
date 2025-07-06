@@ -54,6 +54,138 @@
     "source": "MLPerf Inference v1.1"
   },
   {
+    "gpu_name": "Tesla V100",
+    "gpu_architecture": "Volta",
+    "model_name": "BERT-Base",
+    "model_type": "Transformer",
+    "batch_sizes": [1, 8, 16, 32],
+    "measurements": [
+      {
+        "batch_size": 1,
+        "precision": "FP32",
+        "inference_time_ms": 4.2,
+        "memory_usage_mb": 520.0,
+        "throughput_samples_per_sec": 238.0,
+        "gpu_utilization_percent": 72.0,
+        "power_usage_watts": 245.0,
+        "temperature_celsius": 73.0,
+        "runs": 1000,
+        "std_dev_ms": 0.12
+      },
+      {
+        "batch_size": 8,
+        "precision": "FP16",
+        "inference_time_ms": 26.8,
+        "memory_usage_mb": 2400.0,
+        "throughput_samples_per_sec": 298.0,
+        "gpu_utilization_percent": 88.0,
+        "power_usage_watts": 275.0,
+        "temperature_celsius": 77.0,
+        "runs": 1000,
+        "std_dev_ms": 0.45
+      },
+      {
+        "batch_size": 16,
+        "precision": "FP16",
+        "inference_time_ms": 48.5,
+        "memory_usage_mb": 4200.0,
+        "throughput_samples_per_sec": 330.0,
+        "gpu_utilization_percent": 92.0,
+        "power_usage_watts": 285.0,
+        "temperature_celsius": 79.0,
+        "runs": 1000,
+        "std_dev_ms": 0.85
+      },
+      {
+        "batch_size": 32,
+        "precision": "FP32",
+        "inference_time_ms": 125.6,
+        "memory_usage_mb": 7800.0,
+        "throughput_samples_per_sec": 254.0,
+        "gpu_utilization_percent": 95.0,
+        "power_usage_watts": 295.0,
+        "temperature_celsius": 81.0,
+        "runs": 500,
+        "std_dev_ms": 2.1
+      }
+    ],
+    "system_info": {
+      "driver_version": "460.32.03",
+      "cuda_version": "11.2",
+      "cpu_model": "Intel Xeon Silver 4216",
+      "memory_gb": 64.0,
+      "pcie_generation": "PCIe 3.0"
+    },
+    "timestamp": "2024-01-16T11:15:00Z",
+    "source": "MLPerf Inference v1.1"
+  },
+  {
+    "gpu_name": "Tesla V100",
+    "gpu_architecture": "Volta",
+    "model_name": "YOLO v8",
+    "model_type": "CNN",
+    "batch_sizes": [1, 4, 8, 16],
+    "measurements": [
+      {
+        "batch_size": 1,
+        "precision": "FP32",
+        "inference_time_ms": 12.5,
+        "memory_usage_mb": 1200.0,
+        "throughput_samples_per_sec": 80.0,
+        "gpu_utilization_percent": 78.0,
+        "power_usage_watts": 260.0,
+        "temperature_celsius": 76.0,
+        "runs": 1000,
+        "std_dev_ms": 0.3
+      },
+      {
+        "batch_size": 4,
+        "precision": "FP16",
+        "inference_time_ms": 38.2,
+        "memory_usage_mb": 3800.0,
+        "throughput_samples_per_sec": 104.0,
+        "gpu_utilization_percent": 87.0,
+        "power_usage_watts": 278.0,
+        "temperature_celsius": 78.0,
+        "runs": 1000,
+        "std_dev_ms": 0.8
+      },
+      {
+        "batch_size": 8,
+        "precision": "FP16",
+        "inference_time_ms": 72.1,
+        "memory_usage_mb": 6400.0,
+        "throughput_samples_per_sec": 111.0,
+        "gpu_utilization_percent": 90.0,
+        "power_usage_watts": 285.0,
+        "temperature_celsius": 80.0,
+        "runs": 1000,
+        "std_dev_ms": 1.2
+      },
+      {
+        "batch_size": 16,
+        "precision": "INT8",
+        "inference_time_ms": 95.8,
+        "memory_usage_mb": 8900.0,
+        "throughput_samples_per_sec": 167.0,
+        "gpu_utilization_percent": 93.0,
+        "power_usage_watts": 290.0,
+        "temperature_celsius": 81.0,
+        "runs": 500,
+        "std_dev_ms": 1.8
+      }
+    ],
+    "system_info": {
+      "driver_version": "460.32.03",
+      "cuda_version": "11.2",
+      "cpu_model": "Intel Xeon Silver 4216",
+      "memory_gb": 64.0,
+      "pcie_generation": "PCIe 3.0"
+    },
+    "timestamp": "2024-01-17T13:30:00Z",
+    "source": "Community Benchmarks"
+  },
+  {
     "gpu_name": "A100",
     "gpu_architecture": "Ampere",
     "model_name": "BERT-Base",
@@ -137,6 +269,42 @@
         "temperature_celsius": 78.0,
         "runs": 100,
         "std_dev_ms": 85.0
+      },
+      {
+        "batch_size": 8,
+        "precision": "FP16",
+        "inference_time_ms": 9200.0,
+        "memory_usage_mb": 22800.0,
+        "throughput_samples_per_sec": 0.87,
+        "gpu_utilization_percent": 99.5,
+        "power_usage_watts": 445.0,
+        "temperature_celsius": 80.0,
+        "runs": 100,
+        "std_dev_ms": 120.0
+      },
+      {
+        "batch_size": 2,
+        "precision": "FP16",
+        "inference_time_ms": 2350.0,
+        "memory_usage_mb": 12200.0,
+        "throughput_samples_per_sec": 0.85,
+        "gpu_utilization_percent": 98.5,
+        "power_usage_watts": 428.0,
+        "temperature_celsius": 76.0,
+        "runs": 100,
+        "std_dev_ms": 45.0
+      },
+      {
+        "batch_size": 1,
+        "precision": "FP32",
+        "inference_time_ms": 2100.0,
+        "memory_usage_mb": 15800.0,
+        "throughput_samples_per_sec": 0.48,
+        "gpu_utilization_percent": 96.0,
+        "power_usage_watts": 415.0,
+        "temperature_celsius": 74.0,
+        "runs": 100,
+        "std_dev_ms": 55.0
       }
     ],
     "system_info": {
@@ -148,5 +316,125 @@
     },
     "timestamp": "2024-03-05T09:45:00Z",
     "source": "Community Benchmarks"
+  },
+  {
+    "gpu_name": "RTX 4090",
+    "gpu_architecture": "Ada Lovelace", 
+    "model_name": "Stable Diffusion XL",
+    "model_type": "GAN",
+    "batch_sizes": [1, 2, 4],
+    "measurements": [
+      {
+        "batch_size": 1,
+        "precision": "FP16",
+        "inference_time_ms": 2850.0,
+        "memory_usage_mb": 11200.0,
+        "throughput_samples_per_sec": 0.35,
+        "gpu_utilization_percent": 99.0,
+        "power_usage_watts": 440.0,
+        "temperature_celsius": 77.0,
+        "runs": 100,
+        "std_dev_ms": 65.0
+      },
+      {
+        "batch_size": 2,
+        "precision": "FP16",
+        "inference_time_ms": 5400.0,
+        "memory_usage_mb": 18600.0,
+        "throughput_samples_per_sec": 0.37,
+        "gpu_utilization_percent": 99.5,
+        "power_usage_watts": 448.0,
+        "temperature_celsius": 79.0,
+        "runs": 100,
+        "std_dev_ms": 95.0
+      },
+      {
+        "batch_size": 4,
+        "precision": "FP16",
+        "inference_time_ms": 10200.0,
+        "memory_usage_mb": 23500.0,
+        "throughput_samples_per_sec": 0.39,
+        "gpu_utilization_percent": 99.8,
+        "power_usage_watts": 452.0,
+        "temperature_celsius": 81.0,
+        "runs": 100,
+        "std_dev_ms": 145.0
+      }
+    ],
+    "system_info": {
+      "driver_version": "537.13",
+      "cuda_version": "12.1",
+      "cpu_model": "Intel Core i9-13900K",
+      "memory_gb": 32.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-08-15T14:30:00Z",
+    "source": "Community Benchmarks - SDXL"
+  },
+  {
+    "gpu_name": "RTX 4090",
+    "gpu_architecture": "Ada Lovelace",
+    "model_name": "YOLO v8",
+    "model_type": "CNN",
+    "batch_sizes": [1, 4, 8, 16],
+    "measurements": [
+      {
+        "batch_size": 1,
+        "precision": "FP16",
+        "inference_time_ms": 8.5,
+        "memory_usage_mb": 1200.0,
+        "throughput_samples_per_sec": 117.6,
+        "gpu_utilization_percent": 85.0,
+        "power_usage_watts": 280.0,
+        "temperature_celsius": 65.0,
+        "runs": 1000,
+        "std_dev_ms": 0.8
+      },
+      {
+        "batch_size": 4,
+        "precision": "FP16",
+        "inference_time_ms": 22.0,
+        "memory_usage_mb": 2800.0,
+        "throughput_samples_per_sec": 181.8,
+        "gpu_utilization_percent": 92.0,
+        "power_usage_watts": 320.0,
+        "temperature_celsius": 68.0,
+        "runs": 1000,
+        "std_dev_ms": 1.2
+      },
+      {
+        "batch_size": 8,
+        "precision": "FP16",
+        "inference_time_ms": 38.5,
+        "memory_usage_mb": 4200.0,
+        "throughput_samples_per_sec": 207.8,
+        "gpu_utilization_percent": 95.0,
+        "power_usage_watts": 350.0,
+        "temperature_celsius": 70.0,
+        "runs": 1000,
+        "std_dev_ms": 1.8
+      },
+      {
+        "batch_size": 16,
+        "precision": "FP16",
+        "inference_time_ms": 68.2,
+        "memory_usage_mb": 6800.0,
+        "throughput_samples_per_sec": 234.6,
+        "gpu_utilization_percent": 97.0,
+        "power_usage_watts": 375.0,
+        "temperature_celsius": 72.0,
+        "runs": 1000,
+        "std_dev_ms": 2.5
+      }
+    ],
+    "system_info": {
+      "driver_version": "537.13",
+      "cuda_version": "12.1",
+      "cpu_model": "Intel Core i9-13900K",
+      "memory_gb": 32.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-09-20T11:15:00Z",
+    "source": "YOLOv8 Official Benchmarks"
   }
 ] 

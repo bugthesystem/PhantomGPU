@@ -73,7 +73,7 @@ async fn run() -> PhantomResult<()> {
     println!("{}", "=".repeat(50).bright_blue());
 
     // Execute command using the commands module
-    match &cli.command {
+    match cli.command {
         Commands::Train { model, batch_size, epochs, batches } => {
             let gpu_model = cli.gpu.to_gpu_model();
             println!(
@@ -84,7 +84,7 @@ async fn run() -> PhantomResult<()> {
                     gpu_model.name.yellow()
                 ).bold()
             );
-            commands::handle_train_command(model, *batch_size, *epochs, *batches, gpu_model).await?;
+            commands::handle_train_command(&model, batch_size, epochs, batches, gpu_model).await?;
         }
 
         Commands::Benchmark { model, batch_size, runs } => {
@@ -97,7 +97,7 @@ async fn run() -> PhantomResult<()> {
                     gpu_model.name.yellow()
                 ).bold()
             );
-            commands::handle_benchmark_command(model, *batch_size, *runs, gpu_model).await?;
+            commands::handle_benchmark_command(&model, batch_size, runs, gpu_model).await?;
         }
 
         Commands::Compare { gpus, model, batch_size } => {
@@ -105,7 +105,7 @@ async fn run() -> PhantomResult<()> {
                 "\n{}",
                 format!("📊 Comparing GPUs with {}", format!("{:?}", model).cyan()).bold()
             );
-            commands::handle_compare_command(gpus, model, *batch_size).await?;
+            commands::handle_compare_command(&gpus, &model, batch_size).await?;
         }
 
         Commands::Cost { model, hours, provider } => {
@@ -118,7 +118,7 @@ async fn run() -> PhantomResult<()> {
                     provider
                 ).bold()
             );
-            commands::handle_cost_command(model, *hours, provider).await?;
+            commands::handle_cost_command(&model, hours, &provider).await?;
         }
 
         Commands::Distributed { num_gpus, model, epochs } => {
@@ -130,37 +130,21 @@ async fn run() -> PhantomResult<()> {
                     num_gpus
                 ).bold()
             );
-            commands
-                ::handle_distributed_command(*num_gpus, model, *epochs).await
-                .map_err(|e| PhantomGpuError::BenchmarkFailed {
-                    operation: "Distributed training".to_string(),
-                    reason: format!("{}", e),
-                })?;
+            commands::handle_distributed_command(num_gpus, &model, epochs).await?;
         }
 
         Commands::Suite { experimental } => {
             println!("\n{}", "🧪 Running full benchmark suite".bold());
-            commands
-                ::handle_suite_command(*experimental).await
-                .map_err(|e| PhantomGpuError::BenchmarkFailed {
-                    operation: "Benchmark suite".to_string(),
-                    reason: format!("{}", e),
-                })?;
+            commands::handle_suite_command(experimental).await?;
         }
 
         Commands::ListGpus => {
-            commands::handle_list_gpus_command().map_err(|e| PhantomGpuError::ConfigError {
-                message: format!("Failed to list GPUs: {}", e),
-            })?;
+            commands::handle_list_gpus_command()?;
         }
 
         #[cfg(feature = "real-models")]
         Commands::ListHardware { verbose } => {
-            commands
-                ::handle_list_hardware_command(*verbose)
-                .map_err(|e| PhantomGpuError::ConfigError {
-                    message: format!("Failed to list hardware profiles: {}", e),
-                })?;
+            commands::handle_list_hardware_command(verbose)?;
         }
 
         #[cfg(feature = "real-models")]
@@ -175,10 +159,10 @@ async fn run() -> PhantomResult<()> {
                 ).bold()
             );
             commands::handle_load_model_command(
-                model,
-                format,
-                *batch_size,
-                *runs,
+                &model,
+                &format,
+                batch_size,
+                runs,
                 gpu_model
             ).await?;
         }
@@ -197,15 +181,15 @@ async fn run() -> PhantomResult<()> {
             hardware_profiles,
         } => {
             commands::handle_compare_models_command(
-                models,
-                gpus,
-                batch_sizes,
-                output,
-                *include_cost,
-                *fast_mode,
-                *show_progress,
-                *precision,
-                *real_hardware,
+                &models,
+                &gpus,
+                &batch_sizes,
+                &output,
+                include_cost,
+                fast_mode,
+                show_progress,
+                precision,
+                real_hardware,
                 hardware_profiles.as_deref()
             ).await?;
         }
@@ -221,13 +205,13 @@ async fn run() -> PhantomResult<()> {
             fast_mode,
         } => {
             commands::handle_recommend_gpu_command(
-                model,
-                *budget,
-                *batch_size,
-                *target_throughput,
-                workload,
-                cloud_providers,
-                *fast_mode
+                &model,
+                budget,
+                batch_size,
+                target_throughput,
+                &workload,
+                &cloud_providers,
+                fast_mode
             ).await?;
         }
 
@@ -237,7 +221,7 @@ async fn run() -> PhantomResult<()> {
             commands::handle_validate_command(
                 gpu.as_deref(),
                 benchmark_data.as_deref(),
-                *verbose
+                verbose
             ).await?;
         }
 
@@ -247,7 +231,16 @@ async fn run() -> PhantomResult<()> {
                 "\n{}",
                 format!("🔧 Calibrating {} Performance Model", gpu.yellow()).cyan().bold()
             );
-            commands::handle_calibrate_command(gpu, benchmark_data, output.as_deref()).await?;
+            commands::handle_calibrate_command(&gpu, &benchmark_data, output.as_deref()).await?;
+        }
+
+        #[cfg(feature = "real-models")]
+        Commands::StressTest { verbose, edge_cases } => {
+            let args = commands::StressTestArgs {
+                verbose,
+                edge_cases,
+            };
+            commands::handle_stress_test(&args)?;
         }
 
         #[cfg(feature = "pytorch")]
@@ -257,7 +250,7 @@ async fn run() -> PhantomResult<()> {
                 "\n{}",
                 format!("🥊 Framework Comparison on {}", gpu_model.name.yellow()).bold()
             );
-            commands::handle_framework_compare_command(*batch_size, gpu_model).await?;
+            commands::handle_framework_compare_command(batch_size, gpu_model).await?;
         }
     }
 

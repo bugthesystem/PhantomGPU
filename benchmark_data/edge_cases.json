@@ -1,0 +1,214 @@
+[
+  {
+    "gpu_name": "RTX 4090",
+    "gpu_architecture": "Ada Lovelace",
+    "model_name": "ResNet-50",
+    "model_type": "CNN",
+    "batch_sizes": [256, 512, 1024],
+    "measurements": [
+      {
+        "batch_size": 256,
+        "precision": "FP32",
+        "inference_time_ms": 145.2,
+        "memory_usage_mb": 18500.0,
+        "throughput_samples_per_sec": 1762.0,
+        "gpu_utilization_percent": 98.0,
+        "power_usage_watts": 480.0,
+        "temperature_celsius": 88.0,
+        "runs": 100,
+        "std_dev_ms": 3.5
+      },
+      {
+        "batch_size": 512,
+        "precision": "FP32",
+        "inference_time_ms": 298.7,
+        "memory_usage_mb": 23800.0,
+        "throughput_samples_per_sec": 1714.0,
+        "gpu_utilization_percent": 99.0,
+        "power_usage_watts": 485.0,
+        "temperature_celsius": 91.0,
+        "runs": 50,
+        "std_dev_ms": 8.2
+      },
+      {
+        "batch_size": 1024,
+        "precision": "FP16",
+        "inference_time_ms": 412.3,
+        "memory_usage_mb": 23950.0,
+        "throughput_samples_per_sec": 2485.0,
+        "gpu_utilization_percent": 99.0,
+        "power_usage_watts": 450.0,
+        "temperature_celsius": 89.0,
+        "runs": 25,
+        "std_dev_ms": 12.8
+      }
+    ],
+    "system_info": {
+      "driver_version": "535.54.03",
+      "cuda_version": "12.2",
+      "cpu_model": "Intel Core i9-13900K",
+      "memory_gb": 64.0,
+      "pcie_generation": "PCIe 5.0"
+    },
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  {
+    "gpu_name": "A100",
+    "gpu_architecture": "Ampere",
+    "model_name": "GPT-3.5",
+    "model_type": "Transformer",
+    "batch_sizes": [32, 64, 128],
+    "measurements": [
+      {
+        "batch_size": 32,
+        "precision": "FP16",
+        "inference_time_ms": 285.4,
+        "memory_usage_mb": 45200.0,
+        "throughput_samples_per_sec": 112.0,
+        "gpu_utilization_percent": 95.0,
+        "power_usage_watts": 320.0,
+        "temperature_celsius": 75.0,
+        "runs": 200,
+        "std_dev_ms": 4.2
+      },
+      {
+        "batch_size": 64,
+        "precision": "FP16",
+        "inference_time_ms": 568.9,
+        "memory_usage_mb": 62800.0,
+        "throughput_samples_per_sec": 112.5,
+        "gpu_utilization_percent": 97.0,
+        "power_usage_watts": 380.0,
+        "temperature_celsius": 78.0,
+        "runs": 100,
+        "std_dev_ms": 8.7
+      },
+      {
+        "batch_size": 128,
+        "precision": "FP16",
+        "inference_time_ms": 1124.6,
+        "memory_usage_mb": 78000.0,
+        "throughput_samples_per_sec": 113.8,
+        "gpu_utilization_percent": 98.0,
+        "power_usage_watts": 400.0,
+        "temperature_celsius": 81.0,
+        "runs": 50,
+        "std_dev_ms": 18.3
+      }
+    ],
+    "system_info": {
+      "driver_version": "470.82.01",
+      "cuda_version": "11.7",
+      "cpu_model": "AMD EPYC 7V13",
+      "memory_gb": 128.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-01-15T14:45:00Z"
+  },
+  {
+    "gpu_name": "Tesla V100",
+    "gpu_architecture": "Volta",
+    "model_name": "Mixed Precision Workload",
+    "model_type": "CNN",
+    "batch_sizes": [16, 32, 64],
+    "measurements": [
+      {
+        "batch_size": 16,
+        "precision": "INT8",
+        "inference_time_ms": 18.7,
+        "memory_usage_mb": 8200.0,
+        "throughput_samples_per_sec": 855.0,
+        "gpu_utilization_percent": 92.0,
+        "power_usage_watts": 280.0,
+        "temperature_celsius": 72.0,
+        "runs": 500,
+        "std_dev_ms": 0.9
+      },
+      {
+        "batch_size": 32,
+        "precision": "INT8",
+        "inference_time_ms": 36.2,
+        "memory_usage_mb": 12400.0,
+        "throughput_samples_per_sec": 884.0,
+        "gpu_utilization_percent": 94.0,
+        "power_usage_watts": 300.0,
+        "temperature_celsius": 75.0,
+        "runs": 300,
+        "std_dev_ms": 1.4
+      },
+      {
+        "batch_size": 64,
+        "precision": "FP32",
+        "inference_time_ms": 156.8,
+        "memory_usage_mb": 18900.0,
+        "throughput_samples_per_sec": 408.0,
+        "gpu_utilization_percent": 96.0,
+        "power_usage_watts": 310.0,
+        "temperature_celsius": 78.0,
+        "runs": 150,
+        "std_dev_ms": 3.2
+      }
+    ],
+    "system_info": {
+      "driver_version": "460.27.04",
+      "cuda_version": "11.2",
+      "cpu_model": "Intel Xeon Gold 6148",
+      "memory_gb": 192.0,
+      "pcie_generation": "PCIe 3.0"
+    },
+    "timestamp": "2024-01-15T16:20:00Z"
+  },
+  {
+    "gpu_name": "RTX 4090",
+    "gpu_architecture": "Ada Lovelace",
+    "model_name": "Stable Diffusion",
+    "model_type": "GAN",
+    "batch_sizes": [1, 4, 8],
+    "measurements": [
+      {
+        "batch_size": 1,
+        "precision": "FP16",
+        "inference_time_ms": 1842.5,
+        "memory_usage_mb": 12800.0,
+        "throughput_samples_per_sec": 0.54,
+        "gpu_utilization_percent": 85.0,
+        "power_usage_watts": 420.0,
+        "temperature_celsius": 82.0,
+        "runs": 50,
+        "std_dev_ms": 32.7
+      },
+      {
+        "batch_size": 4,
+        "precision": "FP16",
+        "inference_time_ms": 6890.2,
+        "memory_usage_mb": 21200.0,
+        "throughput_samples_per_sec": 0.58,
+        "gpu_utilization_percent": 92.0,
+        "power_usage_watts": 465.0,
+        "temperature_celsius": 87.0,
+        "runs": 25,
+        "std_dev_ms": 98.5
+      },
+      {
+        "batch_size": 8,
+        "precision": "FP16",
+        "inference_time_ms": 13256.8,
+        "memory_usage_mb": 23700.0,
+        "throughput_samples_per_sec": 0.60,
+        "gpu_utilization_percent": 94.0,
+        "power_usage_watts": 475.0,
+        "temperature_celsius": 89.0,
+        "runs": 15,
+        "std_dev_ms": 184.2
+      }
+    ],
+    "system_info": {
+      "driver_version": "535.54.03",
+      "cuda_version": "12.2",
+      "cpu_model": "Intel Core i9-13900K",
+      "memory_gb": 64.0,
+      "pcie_generation": "PCIe 5.0"
+    },
+    "timestamp": "2024-01-15T18:10:00Z"
+  }
+] 

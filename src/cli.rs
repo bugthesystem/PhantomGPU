@@ -153,6 +153,18 @@ pub enum Commands {
     },
 
     #[cfg(feature = "real-models")]
+    /// Run stress tests for edge cases and extreme scenarios
+    StressTest {
+        /// Enable verbose output
+        #[arg(long)]
+        verbose: bool,
+
+        /// Load custom edge case data
+        #[arg(long)]
+        edge_cases: Option<String>,
+    },
+
+    #[cfg(feature = "real-models")]
     /// Load and benchmark a real model from file or Hub
     LoadModel {
         /// Model source (file path or Hugging Face model ID)

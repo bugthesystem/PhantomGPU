@@ -55,6 +55,14 @@ impl From<String> for PhantomGpuError {
     }
 }
 
+impl From<Box<dyn std::error::Error>> for PhantomGpuError {
+    fn from(error: Box<dyn std::error::Error>) -> Self {
+        PhantomGpuError::ConfigError {
+            message: error.to_string(),
+        }
+    }
+}
+
 /// Graceful error handler with recovery suggestions
 pub fn handle_error(error: &PhantomGpuError) -> ! {
     eprintln!("\n{}", error.to_string().red().bold());
