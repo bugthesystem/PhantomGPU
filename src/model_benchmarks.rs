@@ -5,6 +5,7 @@
 
 // Removed unused import of PhantomGpuError
 use crate::gpu_config::GpuModel;
+use crate::model_loader::ModelLoader;
 
 #[cfg(feature = "real-models")]
 use crate::real_model_loader::{ RealModelInfo, RealModelLoader };
@@ -259,6 +260,35 @@ impl PopularModels {
     }
 }
 
+/// Convert ModelConfig to ModelInfo for compatibility with benchmark system
+fn model_config_to_model_info(model_name: &str) -> ModelInfo {
+    let loader = ModelLoader::new();
+
+    if let Some(model_config) = loader.get_model(model_name) {
+        ModelInfo {
+            name: model_config.name.clone(),
+            parameters_m: (model_config.parameters as f64) / 1_000_000.0,
+            input_shape: match model_config.model_type.as_str() {
+                "LLM" => vec![1, 512], // sequence length
+                "ViT" => vec![1, 3, 224, 224], // image input
+                "CNN" | "Detection" => vec![1, 3, 640, 640], // typical detection input
+                _ => vec![1, 3, 224, 224], // default
+            },
+            estimated_flops_g: model_config.gflops,
+            memory_mb: model_config.memory_mb as f64,
+        }
+    } else {
+        // Fallback
+        ModelInfo {
+            name: model_name.to_string(),
+            parameters_m: 25.0,
+            input_shape: vec![1, 3, 224, 224],
+            estimated_flops_g: 4.1,
+            memory_mb: 200.0,
+        }
+    }
+}
+
 /// Model benchmark runner that can test any model
 pub struct ModelBenchmark {
     pub emulator_device: EmulatorDevice,
@@ -488,12 +518,48 @@ pub async fn benchmark_pretrained_model(
 
     // Get model info based on enum
     let model_info = match model {
+        // Legacy models
         crate::cli::PretrainedModel::ResNet50 => PopularModels::resnet50(),
         crate::cli::PretrainedModel::BertBase => PopularModels::bert_base(),
         crate::cli::PretrainedModel::Gpt2 => PopularModels::gpt2(),
         crate::cli::PretrainedModel::Llama7b => PopularModels::llama_7b(),
         crate::cli::PretrainedModel::StableDiffusion => PopularModels::stable_diffusion(),
         crate::cli::PretrainedModel::DistilbertReal => PopularModels::load_real_distilbert()?,
+
+        // Large Language Models
+        crate::cli::PretrainedModel::Gpt35Turbo => model_config_to_model_info("GPT-3.5 Turbo"),
+        crate::cli::PretrainedModel::Llama2_7b => model_config_to_model_info("LLaMA 2 7B"),
+        crate::cli::PretrainedModel::Llama2_13b => model_config_to_model_info("LLaMA 2 13B"),
+        crate::cli::PretrainedModel::Llama2_70b => model_config_to_model_info("LLaMA 2 70B"),
+        crate::cli::PretrainedModel::CodeLlama7b => model_config_to_model_info("Code Llama 7B"),
+        crate::cli::PretrainedModel::CodeLlama13b => model_config_to_model_info("Code Llama 13B"),
+        crate::cli::PretrainedModel::CodeLlama34b => model_config_to_model_info("Code Llama 34B"),
+
+        // Vision Transformers
+        crate::cli::PretrainedModel::VitBase16 => model_config_to_model_info("ViT-Base/16"),
+        crate::cli::PretrainedModel::VitLarge16 => model_config_to_model_info("ViT-Large/16"),
+        crate::cli::PretrainedModel::VitHuge14 => model_config_to_model_info("ViT-Huge/14"),
+        crate::cli::PretrainedModel::DeitBase => model_config_to_model_info("DeiT-Base"),
+        crate::cli::PretrainedModel::DeitLarge => model_config_to_model_info("DeiT-Large"),
+        crate::cli::PretrainedModel::ClipVitB32 => model_config_to_model_info("CLIP ViT-B/32"),
+        crate::cli::PretrainedModel::ClipVitB16 => model_config_to_model_info("CLIP ViT-B/16"),
+        crate::cli::PretrainedModel::ClipVitL14 => model_config_to_model_info("CLIP ViT-L/14"),
+
+        // Modern Object Detection
+        crate::cli::PretrainedModel::YoloV9 => model_config_to_model_info("YOLOv9"),
+        crate::cli::PretrainedModel::YoloV10 => model_config_to_model_info("YOLOv10"),
+        crate::cli::PretrainedModel::Detr => model_config_to_model_info("DETR"),
+        crate::cli::PretrainedModel::RtDetr => model_config_to_model_info("RT-DETR"),
+        crate::cli::PretrainedModel::YoloV8n => model_config_to_model_info("YOLOv8n"),
+        crate::cli::PretrainedModel::YoloV8s => model_config_to_model_info("YOLOv8s"),
+        crate::cli::PretrainedModel::YoloV8m => model_config_to_model_info("YOLOv8m"),
+        crate::cli::PretrainedModel::YoloV8l => model_config_to_model_info("YOLOv8l"),
+        crate::cli::PretrainedModel::YoloV8x => model_config_to_model_info("YOLOv8x"),
+
+        // Generative Models
+        crate::cli::PretrainedModel::StableDiffusionXl =>
+            model_config_to_model_info("Stable Diffusion XL"),
+        crate::cli::PretrainedModel::YoloV8 => model_config_to_model_info("YOLO v8"),
 
         #[cfg(feature = "real-models")]
         crate::cli::PretrainedModel::OnnxResnet50 => {
@@ -571,12 +637,48 @@ pub async fn compare_gpus_with_model(
 
     // Get model info
     let model_info = match model {
+        // Legacy models
         crate::cli::PretrainedModel::ResNet50 => PopularModels::resnet50(),
         crate::cli::PretrainedModel::BertBase => PopularModels::bert_base(),
         crate::cli::PretrainedModel::Gpt2 => PopularModels::gpt2(),
         crate::cli::PretrainedModel::Llama7b => PopularModels::llama_7b(),
         crate::cli::PretrainedModel::StableDiffusion => PopularModels::stable_diffusion(),
         crate::cli::PretrainedModel::DistilbertReal => PopularModels::load_real_distilbert()?,
+
+        // Large Language Models
+        crate::cli::PretrainedModel::Gpt35Turbo => model_config_to_model_info("GPT-3.5 Turbo"),
+        crate::cli::PretrainedModel::Llama2_7b => model_config_to_model_info("LLaMA 2 7B"),
+        crate::cli::PretrainedModel::Llama2_13b => model_config_to_model_info("LLaMA 2 13B"),
+        crate::cli::PretrainedModel::Llama2_70b => model_config_to_model_info("LLaMA 2 70B"),
+        crate::cli::PretrainedModel::CodeLlama7b => model_config_to_model_info("Code Llama 7B"),
+        crate::cli::PretrainedModel::CodeLlama13b => model_config_to_model_info("Code Llama 13B"),
+        crate::cli::PretrainedModel::CodeLlama34b => model_config_to_model_info("Code Llama 34B"),
+
+        // Vision Transformers
+        crate::cli::PretrainedModel::VitBase16 => model_config_to_model_info("ViT-Base/16"),
+        crate::cli::PretrainedModel::VitLarge16 => model_config_to_model_info("ViT-Large/16"),
+        crate::cli::PretrainedModel::VitHuge14 => model_config_to_model_info("ViT-Huge/14"),
+        crate::cli::PretrainedModel::DeitBase => model_config_to_model_info("DeiT-Base"),
+        crate::cli::PretrainedModel::DeitLarge => model_config_to_model_info("DeiT-Large"),
+        crate::cli::PretrainedModel::ClipVitB32 => model_config_to_model_info("CLIP ViT-B/32"),
+        crate::cli::PretrainedModel::ClipVitB16 => model_config_to_model_info("CLIP ViT-B/16"),
+        crate::cli::PretrainedModel::ClipVitL14 => model_config_to_model_info("CLIP ViT-L/14"),
+
+        // Modern Object Detection
+        crate::cli::PretrainedModel::YoloV9 => model_config_to_model_info("YOLOv9"),
+        crate::cli::PretrainedModel::YoloV10 => model_config_to_model_info("YOLOv10"),
+        crate::cli::PretrainedModel::Detr => model_config_to_model_info("DETR"),
+        crate::cli::PretrainedModel::RtDetr => model_config_to_model_info("RT-DETR"),
+        crate::cli::PretrainedModel::YoloV8n => model_config_to_model_info("YOLOv8n"),
+        crate::cli::PretrainedModel::YoloV8s => model_config_to_model_info("YOLOv8s"),
+        crate::cli::PretrainedModel::YoloV8m => model_config_to_model_info("YOLOv8m"),
+        crate::cli::PretrainedModel::YoloV8l => model_config_to_model_info("YOLOv8l"),
+        crate::cli::PretrainedModel::YoloV8x => model_config_to_model_info("YOLOv8x"),
+
+        // Generative Models
+        crate::cli::PretrainedModel::StableDiffusionXl =>
+            model_config_to_model_info("Stable Diffusion XL"),
+        crate::cli::PretrainedModel::YoloV8 => model_config_to_model_info("YOLO v8"),
 
         #[cfg(feature = "real-models")]
         crate::cli::PretrainedModel::OnnxResnet50 => {

@@ -38,13 +38,14 @@ pub struct BenchmarkMeasurement {
     pub std_dev_ms: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ModelType {
     CNN,
     Transformer,
-    RNN,
     GAN,
-    Other(String),
+    LLM, // Large Language Models
+    ViT, // Vision Transformers
+    Detection, // Detection models (DETR, RT-DETR)
 }
 
 impl std::fmt::Display for ModelType {
@@ -52,9 +53,25 @@ impl std::fmt::Display for ModelType {
         match self {
             ModelType::CNN => write!(f, "CNN"),
             ModelType::Transformer => write!(f, "Transformer"),
-            ModelType::RNN => write!(f, "RNN"),
             ModelType::GAN => write!(f, "GAN"),
-            ModelType::Other(s) => write!(f, "{}", s),
+            ModelType::LLM => write!(f, "LLM"),
+            ModelType::ViT => write!(f, "ViT"),
+            ModelType::Detection => write!(f, "Detection"),
+        }
+    }
+}
+
+impl std::str::FromStr for ModelType {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "CNN" => Ok(ModelType::CNN),
+            "Transformer" => Ok(ModelType::Transformer),
+            "GAN" => Ok(ModelType::GAN),
+            "LLM" => Ok(ModelType::LLM),
+            "ViT" => Ok(ModelType::ViT),
+            "Detection" => Ok(ModelType::Detection),
+            _ => Err(()),
         }
     }
 }
@@ -186,36 +203,77 @@ impl CalibrationEngine {
 
         // Apply batch size penalty for small batches (GPU underutilization)
         // Model-type-specific penalties
-        let batch_penalty = if model_config.model_type == "Transformer" {
-            // Transformers are less sensitive to batch size due to attention mechanisms
-            if batch_size == 1 {
-                1.8 // Less penalty for transformers
-            } else if batch_size < 4 {
-                1.3
-            } else if batch_size > 16 {
-                0.9 // Mild memory bottleneck for large batches
-            } else {
-                1.0
+        let batch_penalty = match model_config.model_type.as_str() {
+            "Transformer" => {
+                // Transformers are less sensitive to batch size due to attention mechanisms
+                if batch_size == 1 {
+                    1.8 // Less penalty for transformers
+                } else if batch_size < 4 {
+                    1.3
+                } else if batch_size > 16 {
+                    0.9 // Mild memory bottleneck for large batches
+                } else {
+                    1.0
+                }
             }
-        } else {
-            // CNN models are more sensitive to batch size
-            if batch_size == 1 {
-                2.4 // Single batch is much less efficient (increased from 1.8)
-            } else if batch_size < 4 {
-                1.6 // Small batches are less efficient (increased from 1.3)
-            } else if batch_size > 16 {
-                0.85 // Large batches have memory bottlenecks on older hardware
-            } else {
-                1.0 // Medium batches are most efficient
+            "LLM" => {
+                // LLMs have unique scaling characteristics due to autoregressive generation
+                if batch_size == 1 {
+                    1.2 // LLMs are naturally efficient at batch=1 (single conversation)
+                } else if batch_size < 8 {
+                    1.1 // Small batches still efficient
+                } else if batch_size > 32 {
+                    1.4 // Large batches cause memory pressure and cache misses
+                } else {
+                    1.0
+                }
+            }
+            "ViT" => {
+                // Vision Transformers have similar characteristics to transformers but with image patches
+                if batch_size == 1 {
+                    1.6 // Moderate penalty for single image processing
+                } else if batch_size < 8 {
+                    1.2
+                } else if batch_size > 64 {
+                    1.1 // ViTs handle large batches better than LLMs
+                } else {
+                    1.0
+                }
+            }
+            "Detection" => {
+                // Detection models (DETR, RT-DETR) are optimized for single or small batches
+                if batch_size == 1 {
+                    1.1 // Detection models are naturally efficient at batch=1
+                } else if batch_size < 4 {
+                    1.0 // Small batches are optimal
+                } else if batch_size > 8 {
+                    1.3 // Detection models don't scale well to large batches
+                } else {
+                    1.05
+                }
+            }
+            _ => {
+                // CNN models and others are more sensitive to batch size
+                if batch_size == 1 {
+                    2.4 // Single batch is much less efficient (increased from 1.8)
+                } else if batch_size < 4 {
+                    1.6 // Small batches are less efficient (increased from 1.3)
+                } else if batch_size > 16 {
+                    0.85 // Large batches have memory bottlenecks on older hardware
+                } else {
+                    1.0 // Medium batches are most efficient
+                }
             }
         };
 
         // Apply memory bandwidth limitations for older hardware
         let memory_penalty = if gpu_model.name.contains("Tesla V100") && batch_size > 8 {
-            if model_config.model_type == "Transformer" {
-                1.08 // Transformers have better memory access patterns
-            } else {
-                1.15 // V100 has lower memory bandwidth (900 GB/s), causing bottlenecks
+            match model_config.model_type.as_str() {
+                "Transformer" => 1.08, // Transformers have better memory access patterns
+                "LLM" => 1.25, // LLMs require high memory bandwidth for attention
+                "ViT" => 1.12, // ViTs have moderate memory requirements
+                "Detection" => 1.05, // Detection models are less memory intensive
+                _ => 1.15, // V100 has lower memory bandwidth (900 GB/s), causing bottlenecks
             }
         } else {
             1.0
@@ -970,9 +1028,10 @@ fn model_type_str(model_type: &ModelType) -> &str {
     match model_type {
         ModelType::CNN => "CNN",
         ModelType::Transformer => "Transformer",
-        ModelType::RNN => "RNN",
         ModelType::GAN => "GAN",
-        ModelType::Other(s) => s,
+        ModelType::LLM => "LLM",
+        ModelType::ViT => "ViT",
+        ModelType::Detection => "Detection",
     }
 }
 

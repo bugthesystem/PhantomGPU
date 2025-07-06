@@ -306,12 +306,73 @@ pub enum ModelType {
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum PretrainedModel {
+    // ===== LEGACY MODELS =====
     ResNet50,
     BertBase,
     Gpt2,
     Llama7b,
     StableDiffusion,
     DistilbertReal,
+
+    // ===== LARGE LANGUAGE MODELS =====
+    #[value(name = "gpt35-turbo")]
+    Gpt35Turbo,
+    #[value(name = "llama2-7b")]
+    Llama2_7b,
+    #[value(name = "llama2-13b")]
+    Llama2_13b,
+    #[value(name = "llama2-70b")]
+    Llama2_70b,
+    #[value(name = "codellama-7b")]
+    CodeLlama7b,
+    #[value(name = "codellama-13b")]
+    CodeLlama13b,
+    #[value(name = "codellama-34b")]
+    CodeLlama34b,
+
+    // ===== VISION TRANSFORMERS =====
+    #[value(name = "vit-base-16")]
+    VitBase16,
+    #[value(name = "vit-large-16")]
+    VitLarge16,
+    #[value(name = "vit-huge-14")]
+    VitHuge14,
+    #[value(name = "deit-base")]
+    DeitBase,
+    #[value(name = "deit-large")]
+    DeitLarge,
+    #[value(name = "clip-vit-b-32")]
+    ClipVitB32,
+    #[value(name = "clip-vit-b-16")]
+    ClipVitB16,
+    #[value(name = "clip-vit-l-14")]
+    ClipVitL14,
+
+    // ===== MODERN OBJECT DETECTION =====
+    #[value(name = "yolov9")]
+    YoloV9,
+    #[value(name = "yolov10")]
+    YoloV10,
+    #[value(name = "detr")]
+    Detr,
+    #[value(name = "rt-detr")]
+    RtDetr,
+    #[value(name = "yolov8n")]
+    YoloV8n,
+    #[value(name = "yolov8s")]
+    YoloV8s,
+    #[value(name = "yolov8m")]
+    YoloV8m,
+    #[value(name = "yolov8l")]
+    YoloV8l,
+    #[value(name = "yolov8x")]
+    YoloV8x,
+
+    // ===== GENERATIVE MODELS =====
+    #[value(name = "stable-diffusion-xl")]
+    StableDiffusionXl,
+    #[value(name = "yolo-v8")]
+    YoloV8,
 
     // Real model support
     #[cfg(feature = "real-models")]
