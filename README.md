@@ -39,28 +39,22 @@ cargo build --release --features real-models
 
 ## Features
 
-### 🎯 **Model Support**
+### **Model Support**
 - **TensorFlow**: SavedModel, frozen graphs (.pb), TensorFlow Lite (.tflite), Keras (.h5)
 - **PyTorch**: Model files (.pth, .pt) 
 - **ONNX**: Standard ONNX models (.onnx)
 - **HuggingFace**: Direct loading from HuggingFace Hub
 
-### 🖥️ **GPU Support**
+### **GPU Support**
 - **Production GPUs**: V100, A100, RTX 4090, RTX 3090, T4, RTX 4080, H100, A6000, L40s, MI300X
 - **Custom Hardware**: Define any GPU with TOML profiles
 - **Precision Support**: FP32, FP16, INT8 performance modeling
 
-### 📊 **Analysis & Optimization**
+### **Analysis & Optimization**
 - **Performance Comparison**: Side-by-side GPU benchmarks
 - **Cost Estimation**: Real-time cloud pricing and ROI analysis
 - **Memory Usage**: Detailed memory consumption analysis
 - **Throughput Optimization**: Find optimal batch sizes and configurations
-
-### 🛠️ **Developer Experience**
-- **CLI Interface**: Simple, intuitive commands
-- **Progress Indicators**: Real-time benchmarking progress
-- **Detailed Logging**: Comprehensive performance insights
-- **Error Handling**: Clear error messages and suggestions
 
 ## Supported GPUs
 
@@ -117,7 +111,7 @@ GPU Performance Comparison:
 │ RTX 4090    │ 32         │ 3,456.8      │ 9.8         │ Local        │
 └─────────────┴────────────┴──────────────┴─────────────┴──────────────┘
 
-Recommendation: A100 provides best performance for large-scale inference, 
+Recommendation: A100 provides the best performance for large-scale inference. 
 RTX 4090 offers excellent price/performance for local development.
 ```
 
@@ -308,5 +302,3 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 **Ready to optimize your ML deployments?** ⚡
-
-[Get Started](#quick-start) | [Documentation](docs/) | [Examples](examples/) | [Contributing](CONTRIBUTING.md) 
