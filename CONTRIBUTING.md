@@ -151,7 +151,7 @@ cargo test --features real-models hardware_profile_tests
 4. Write comprehensive tests
 
 #### New GPU Support
-1. Add GPU definition to `real_hardware_profiles.toml`
+1. Add GPU definition to `hardware_profiles.toml`
 2. Include thermal, memory, and compute characteristics
 3. Test with various model types
 4. Update documentation

@@ -11,7 +11,74 @@
 use crate::gpu_config::GpuModel;
 use crate::models::ModelConfig;
 use std::collections::HashMap;
+use std::path::Path;
 use serde::{ Deserialize, Serialize };
+
+/// TOML structure for loading hardware profiles from hardware_profiles.toml
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HardwareProfilesConfig {
+    pub profiles: HashMap<String, TomlHardwareProfile>,
+}
+
+/// TOML-compatible hardware profile structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TomlHardwareProfile {
+    pub name: String,
+    pub thermal: ThermalConfig,
+    pub memory: MemoryConfig,
+    pub architecture: ArchitectureConfig,
+    pub model_performance: ModelPerformanceConfig,
+    pub precision: PrecisionConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThermalConfig {
+    pub tdp_watts: f64,
+    pub base_clock_mhz: f64,
+    pub boost_clock_mhz: f64,
+    pub throttle_temp_celsius: f64,
+    pub thermal_factor_sustained: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryConfig {
+    pub l1_cache_kb: f64,
+    pub l2_cache_mb: f64,
+    pub memory_channels: usize,
+    pub cache_hit_ratio: f64,
+    pub coalescing_efficiency: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ArchitectureConfig {
+    pub cuda_cores: usize,
+    pub tensor_cores: usize,
+    pub rt_cores: usize,
+    pub streaming_multiprocessors: usize,
+    pub memory_bus_width: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModelPerformanceConfig {
+    pub cnn: TomlModelTypePerformance,
+    pub transformer: TomlModelTypePerformance,
+    pub rnn: TomlModelTypePerformance,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TomlModelTypePerformance {
+    pub batch_scaling_curve: Vec<f64>,
+    pub memory_efficiency: f64,
+    pub tensor_core_utilization: f64,
+    pub architecture_multiplier: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PrecisionConfig {
+    pub fp16_multiplier: f64,
+    pub int8_multiplier: f64,
+    pub int4_multiplier: f64,
+}
 
 /// Real hardware performance characteristics for a GPU
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -150,8 +217,143 @@ impl RealHardwareCalculator {
         }
     }
 
-    /// Load real hardware profiles based on actual benchmark data
+    /// Load real hardware profiles from TOML file with fallback to hardcoded profiles
     fn load_real_hardware_profiles(&mut self) {
+        // Try to load from TOML file first
+        if let Ok(profiles) = self.load_profiles_from_toml() {
+            println!("✅ Loaded {} hardware profiles from hardware_profiles.toml", profiles.len());
+            self.profiles = profiles;
+            return;
+        }
+
+        // Fallback to hardcoded profiles
+        println!("⚠️ Failed to load TOML profiles, using hardcoded fallback");
+        self.load_hardcoded_profiles();
+    }
+
+    /// Load profiles from hardware_profiles.toml file
+    fn load_profiles_from_toml(
+        &self
+    ) -> Result<HashMap<String, RealHardwareProfile>, Box<dyn std::error::Error>> {
+        let toml_path = Path::new("hardware_profiles.toml");
+
+        if !toml_path.exists() {
+            return Err("hardware_profiles.toml not found".into());
+        }
+
+        let toml_content = std::fs::read_to_string(toml_path)?;
+        let config: HardwareProfilesConfig = toml::from_str(&toml_content)?;
+
+        let mut profiles = HashMap::new();
+
+        // Get GPU models for memory/compute specs
+        let gpu_manager = crate::gpu_config::GpuModelManager
+            ::load()
+            .map_err(|e| format!("Failed to load GPU models: {}", e))?;
+
+        for (key, toml_profile) in config.profiles {
+            // Skip template profiles
+            if key == "custom_gpu" {
+                continue;
+            }
+
+            // Get base GPU model for memory/compute specs
+            let gpu_model = gpu_manager
+                .get_gpu(&key)
+                .or_else(|| {
+                    // Try partial matching
+                    for (name, model) in gpu_manager.models.iter() {
+                        if name.contains(&key) || key.contains(name) {
+                            return Some(model);
+                        }
+                    }
+                    None
+                })
+                .ok_or_else(|| format!("GPU model '{}' not found in gpu_models.toml", key))?
+                .clone();
+
+            // Save the name before moving toml_profile
+            let name_lower = toml_profile.name.to_lowercase();
+            let profile = self.convert_toml_to_profile(toml_profile, gpu_model);
+            profiles.insert(key.clone(), profile.clone());
+
+            // Add common aliases
+            if !profiles.contains_key(&name_lower) {
+                profiles.insert(name_lower, profile);
+            }
+        }
+
+        Ok(profiles)
+    }
+
+    /// Convert TOML profile to internal RealHardwareProfile
+    fn convert_toml_to_profile(
+        &self,
+        toml_profile: TomlHardwareProfile,
+        gpu_model: GpuModel
+    ) -> RealHardwareProfile {
+        // Convert batch scaling curve from simple Vec<f64> to Vec<(usize, f64)>
+        let create_batch_scaling = |curve: &[f64]| -> Vec<(usize, f64)> {
+            let batch_sizes = [1, 2, 4, 8, 16, 32, 64, 128];
+            batch_sizes
+                .iter()
+                .zip(curve.iter())
+                .map(|(&size, &factor)| (size, factor))
+                .collect()
+        };
+
+        // Convert TOML model performance to internal format
+        let convert_model_perf = |toml_perf: &TomlModelTypePerformance| -> ModelTypePerformance {
+            ModelTypePerformance {
+                batch_scaling: create_batch_scaling(&toml_perf.batch_scaling_curve),
+                memory_efficiency: [
+                    ("small".to_string(), toml_perf.memory_efficiency * 0.8),
+                    ("medium".to_string(), toml_perf.memory_efficiency * 0.9),
+                    ("large".to_string(), toml_perf.memory_efficiency),
+                ]
+                    .iter()
+                    .cloned()
+                    .collect(),
+                fp32_multiplier: 1.0,
+                fp16_multiplier: toml_profile.precision.fp16_multiplier,
+                int8_multiplier: toml_profile.precision.int8_multiplier,
+                tensor_core_utilization: toml_perf.tensor_core_utilization,
+                memory_bound_ratio: 1.0 - toml_perf.memory_efficiency, // Inverse relationship
+            }
+        };
+
+        RealHardwareProfile {
+            gpu_model,
+            thermal_design_power: toml_profile.thermal.tdp_watts,
+            base_clock_mhz: toml_profile.thermal.base_clock_mhz,
+            boost_clock_mhz: toml_profile.thermal.boost_clock_mhz,
+            thermal_throttle_temp: toml_profile.thermal.throttle_temp_celsius,
+            l1_cache_kb: toml_profile.memory.l1_cache_kb,
+            l2_cache_mb: toml_profile.memory.l2_cache_mb,
+            memory_channels: toml_profile.memory.memory_channels,
+            memory_bus_width: toml_profile.architecture.memory_bus_width,
+            cuda_cores: toml_profile.architecture.cuda_cores,
+            tensor_cores: if toml_profile.architecture.tensor_cores > 0 {
+                Some(toml_profile.architecture.tensor_cores)
+            } else {
+                None
+            },
+            rt_cores: if toml_profile.architecture.rt_cores > 0 {
+                Some(toml_profile.architecture.rt_cores)
+            } else {
+                None
+            },
+            streaming_multiprocessors: toml_profile.architecture.streaming_multiprocessors,
+            cnn_performance: convert_model_perf(&toml_profile.model_performance.cnn),
+            transformer_performance: convert_model_perf(
+                &toml_profile.model_performance.transformer
+            ),
+            rnn_performance: convert_model_perf(&toml_profile.model_performance.rnn),
+        }
+    }
+
+    /// Fallback hardcoded profiles (reduced set for safety)
+    fn load_hardcoded_profiles(&mut self) {
         // V100 profile based on real data
         let v100_profile = RealHardwareProfile {
             gpu_model: GpuModel {

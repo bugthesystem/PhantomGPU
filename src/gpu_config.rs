@@ -29,7 +29,7 @@ struct DefaultConfig {
 
 /// GPU Model Manager - loads and provides access to GPU configurations
 pub struct GpuModelManager {
-    models: HashMap<String, GpuModel>,
+    pub models: HashMap<String, GpuModel>,
     default_gpu: String,
 }
 

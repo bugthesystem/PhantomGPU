@@ -152,6 +152,15 @@ async fn run() -> PhantomResult<()> {
         }
 
         #[cfg(feature = "real-models")]
+        Commands::ListHardware { verbose } => {
+            commands
+                ::handle_list_hardware_command(*verbose)
+                .map_err(|e| PhantomGpuError::ConfigError {
+                    message: format!("Failed to list hardware profiles: {}", e),
+                })?;
+        }
+
+        #[cfg(feature = "real-models")]
         Commands::LoadModel { model, format, batch_size, runs } => {
             let gpu_model = cli.gpu.to_gpu_model();
             println!(

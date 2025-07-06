@@ -109,8 +109,16 @@ pub enum Commands {
         experimental: bool,
     },
 
-    /// List available GPU models
+    /// List available GPU models (basic specs)
     ListGpus,
+
+    #[cfg(feature = "real-models")]
+    /// List detailed hardware profiles for realistic performance modeling
+    ListHardware {
+        /// Show detailed specifications for each profile
+        #[arg(long)]
+        verbose: bool,
+    },
 
     #[cfg(feature = "real-models")]
     /// Load and benchmark a real model from file or Hub
