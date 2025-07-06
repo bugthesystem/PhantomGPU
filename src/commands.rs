@@ -175,7 +175,7 @@ pub async fn handle_benchmark_command(
         });
     }
 
-    crate::model_loader
+    crate::model_benchmarks
         ::benchmark_pretrained_model(model, batch_size, runs, gpu_model).await
         .map_err(|e| PhantomGpuError::BenchmarkFailed {
             operation: "benchmarking".to_string(),
@@ -205,7 +205,7 @@ pub async fn handle_compare_command(
         .map(|g| g.to_gpu_model())
         .collect();
 
-    crate::model_loader
+    crate::model_benchmarks
         ::compare_gpus_with_model(model, batch_size, gpu_models).await
         .map_err(|e| PhantomGpuError::BenchmarkFailed {
             operation: "GPU comparison".to_string(),
@@ -311,7 +311,7 @@ pub async fn handle_suite_command(experimental: bool) -> Result<(), Box<dyn std:
     BenchmarkSuite::gpu_comparison().await;
 
     // Production features
-    let _ = crate::model_loader::run_model_benchmarks().await;
+    let _ = crate::model_benchmarks::run_model_benchmarks().await;
     let _ = crate::cloud_cost_estimator::analyze_cloud_costs().await;
 
     if experimental {

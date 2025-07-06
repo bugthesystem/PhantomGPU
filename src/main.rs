@@ -19,6 +19,7 @@ pub mod commands;
 pub mod gpu_config;
 pub mod neural_network_demo;
 pub mod model_loader;
+pub mod model_benchmarks;
 pub mod cloud_cost_estimator;
 
 // Real model support

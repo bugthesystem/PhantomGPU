@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 use serde::{ Deserialize, Serialize };
-use crate::model_loader::ModelInfo;
+use crate::model_benchmarks::{ ModelInfo, PopularModels };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CloudProvider {
@@ -192,7 +192,7 @@ impl TrainingWorkload {
 
     pub fn imagenet_resnet50() -> Self {
         Self::new(
-            crate::model_loader::PopularModels::resnet50(),
+            PopularModels::resnet50(),
             1_300_000, // ImageNet size
             128, // Batch size
             90 // Epochs
@@ -201,7 +201,7 @@ impl TrainingWorkload {
 
     pub fn bert_fine_tuning() -> Self {
         Self::new(
-            crate::model_loader::PopularModels::bert_base(),
+            PopularModels::bert_base(),
             100_000, // Fine-tuning dataset
             32, // Batch size
             3 // Epochs
@@ -210,7 +210,7 @@ impl TrainingWorkload {
 
     pub fn llama_7b_training() -> Self {
         Self::new(
-            crate::model_loader::PopularModels::llama_7b(),
+            PopularModels::llama_7b(),
             10_000_000, // Large text dataset
             4, // Small batch due to memory
             1 // One epoch is expensive
