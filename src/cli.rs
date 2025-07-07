@@ -330,6 +330,26 @@ pub enum PretrainedModel {
     #[value(name = "codellama-34b")]
     CodeLlama34b,
 
+    // ===== POPULAR MODERN LLMS =====
+    #[value(name = "qwen25-7b")]
+    Qwen25_7b,
+    #[value(name = "qwen25-14b")]
+    Qwen25_14b,
+    #[value(name = "mistral-7b")]
+    Mistral7b,
+    #[value(name = "mistral-22b")]
+    Mistral22b,
+    #[value(name = "deepseek-v3")]
+    DeepSeekV3,
+    #[value(name = "phi35-mini")]
+    Phi35Mini,
+    #[value(name = "phi35-medium")]
+    Phi35Medium,
+    #[value(name = "gemma2-9b")]
+    Gemma2_9b,
+    #[value(name = "gemma2-27b")]
+    Gemma2_27b,
+
     // ===== VISION TRANSFORMERS =====
     #[value(name = "vit-base-16")]
     VitBase16,

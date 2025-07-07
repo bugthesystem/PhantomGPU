@@ -17,6 +17,7 @@ pub mod commands;
 
 // Core modules
 pub mod gpu_config;
+pub mod bottleneck_analysis;
 pub mod neural_network_demo;
 pub mod model_loader;
 pub mod model_benchmarks;

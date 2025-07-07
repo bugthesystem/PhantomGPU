@@ -24,24 +24,52 @@ architecture.rt_cores = 0
 architecture.streaming_multiprocessors = 132
 architecture.memory_bus_width = 6144
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.h200.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 4900.0
+memory_bandwidth_utilization = 0.85  # Real-world achievable bandwidth
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 67.0
+compute_tflops_fp16 = 1979.0
+compute_tflops_int8 = 3958.0
+compute_utilization = 0.90  # Real-world achievable compute
+
+# Bottleneck thresholds - when does each bottleneck dominate?
+memory_bound_threshold_ratio = 0.6  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 1.4  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.h200.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65]
 memory_efficiency = 0.92
 tensor_core_utilization = 0.95
 architecture_multiplier = 2.10
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.3  # Low memory intensity
+compute_intensity = 0.9  # High compute intensity
 
 [profiles.h200.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.93, 0.88, 0.83, 0.78, 0.73, 0.68, 0.63]
 memory_efficiency = 0.90
 tensor_core_utilization = 0.98
 architecture_multiplier = 2.25
+# Bottleneck characteristics
+primary_bottleneck = "memory"  # LLMs are memory-bound
+memory_intensity = 0.8  # High memory intensity
+compute_intensity = 0.4  # Lower compute intensity
 
 [profiles.h200.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.97, 0.94, 0.91, 0.88, 0.85, 0.82, 0.79]
 memory_efficiency = 0.88
 tensor_core_utilization = 0.85
 architecture_multiplier = 2.05
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.6  # Medium memory intensity
+compute_intensity = 0.6  # Medium compute intensity
 
 # Precision performance multipliers - Hopper excels at mixed precision
 [profiles.h200.precision]
@@ -72,24 +100,52 @@ architecture.rt_cores = 0
 architecture.streaming_multiprocessors = 114
 architecture.memory_bus_width = 5120
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.h100.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 3350.0
+memory_bandwidth_utilization = 0.82  # Real-world achievable bandwidth
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 67.0
+compute_tflops_fp16 = 1513.0
+compute_tflops_int8 = 3026.0
+compute_utilization = 0.88  # Real-world achievable compute
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 0.45  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 2.21  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.h100.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.92, 0.85, 0.78, 0.72, 0.66, 0.60, 0.55]
 memory_efficiency = 0.88
 tensor_core_utilization = 0.85
 architecture_multiplier = 1.65
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.3  # Low memory intensity
+compute_intensity = 0.9  # High compute intensity
 
 [profiles.h100.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60]
 memory_efficiency = 0.85
 tensor_core_utilization = 0.95
 architecture_multiplier = 1.85
+# Bottleneck characteristics
+primary_bottleneck = "memory"  # LLMs are memory-bound
+memory_intensity = 0.75  # High memory intensity
+compute_intensity = 0.4  # Lower compute intensity
 
 [profiles.h100.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65]
 memory_efficiency = 0.80
 tensor_core_utilization = 0.75
 architecture_multiplier = 1.70
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.6  # Medium memory intensity
+compute_intensity = 0.6  # Medium compute intensity
 
 # Precision performance multipliers - Hopper excels at mixed precision
 [profiles.h100.precision]
@@ -120,24 +176,52 @@ architecture.rt_cores = 170
 architecture.streaming_multiprocessors = 170
 architecture.memory_bus_width = 512
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.rtx5090.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 1792.0
+memory_bandwidth_utilization = 0.75  # Consumer GPU limitations
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 104.8
+compute_tflops_fp16 = 1677.0
+compute_tflops_int8 = 3354.0
+compute_utilization = 0.82  # Consumer GPU limitations
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 0.17  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 1.07  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.rtx5090.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.92, 0.85, 0.78, 0.72, 0.66, 0.60, 0.54]
 memory_efficiency = 0.85
 tensor_core_utilization = 0.80
 architecture_multiplier = 1.75
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.25  # Low memory intensity
+compute_intensity = 0.95  # Very high compute intensity
 
 [profiles.rtx5090.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.88, 0.80, 0.72, 0.68, 0.60, 0.52, 0.44]
 memory_efficiency = 0.80
 tensor_core_utilization = 0.90
 architecture_multiplier = 1.80
+# Bottleneck characteristics
+primary_bottleneck = "memory"  # LLMs are memory-bound, major issue for RTX 5090
+memory_intensity = 0.9  # Very high memory intensity
+compute_intensity = 0.3  # Lower compute intensity
 
 [profiles.rtx5090.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.90, 0.82, 0.74, 0.67, 0.60, 0.54, 0.48]
 memory_efficiency = 0.75
 tensor_core_utilization = 0.65
 architecture_multiplier = 1.65
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.7  # High memory intensity
+compute_intensity = 0.5  # Medium compute intensity
 
 # Precision performance multipliers - Blackwell FP8 support
 [profiles.rtx5090.precision]
@@ -168,24 +252,52 @@ architecture.rt_cores = 188
 architecture.streaming_multiprocessors = 188
 architecture.memory_bus_width = 512
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.rtx_pro_6000.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 1790.0
+memory_bandwidth_utilization = 0.78  # Professional GPU efficiency
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 126.0
+compute_tflops_fp16 = 2016.0
+compute_tflops_int8 = 4032.0
+compute_utilization = 0.85  # Professional GPU efficiency
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 0.14  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 0.89  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.rtx_pro_6000.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.94, 0.88, 0.82, 0.76, 0.70, 0.64, 0.58]
 memory_efficiency = 0.90
 tensor_core_utilization = 0.85
 architecture_multiplier = 1.90
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.2  # Low memory intensity
+compute_intensity = 0.95  # Very high compute intensity
 
 [profiles.rtx_pro_6000.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.92, 0.85, 0.78, 0.74, 0.68, 0.62, 0.56]
 memory_efficiency = 0.88
 tensor_core_utilization = 0.95
 architecture_multiplier = 2.00
+# Bottleneck characteristics
+primary_bottleneck = "memory"  # LLMs are memory-bound
+memory_intensity = 0.85  # High memory intensity
+compute_intensity = 0.35  # Lower compute intensity
 
 [profiles.rtx_pro_6000.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.94, 0.88, 0.82, 0.78, 0.72, 0.66, 0.60]
 memory_efficiency = 0.85
 tensor_core_utilization = 0.75
 architecture_multiplier = 1.85
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.65  # Medium-high memory intensity
+compute_intensity = 0.55  # Medium compute intensity
 
 # Precision performance multipliers - Professional Blackwell
 [profiles.rtx_pro_6000.precision]
@@ -216,24 +328,52 @@ architecture.rt_cores = 128
 architecture.streaming_multiprocessors = 128
 architecture.memory_bus_width = 384
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.rtx4090.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 1008.0
+memory_bandwidth_utilization = 0.70  # Gaming GPU limitations
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 35.0
+compute_tflops_fp16 = 560.0
+compute_tflops_int8 = 1120.0
+compute_utilization = 0.75  # Gaming GPU limitations
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 0.56  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 1.80  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.rtx4090.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.90, 0.82, 0.75, 0.68, 0.62, 0.56, 0.50]
 memory_efficiency = 0.80
 tensor_core_utilization = 0.70
 architecture_multiplier = 1.52
+# Bottleneck characteristics - RTX 4090 excels at small-batch CNN inference
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.2  # Very low memory intensity
+compute_intensity = 0.98  # Excellent compute intensity for CNNs
 
 [profiles.rtx4090.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.85, 0.78, 0.70, 0.66, 0.58, 0.50, 0.42]
 memory_efficiency = 0.75
 tensor_core_utilization = 0.82
 architecture_multiplier = 1.45
+# Bottleneck characteristics - RTX 4090 struggles with LLM inference
+primary_bottleneck = "memory"  # LLMs are memory-bound, major weakness
+memory_intensity = 0.95  # Very high memory intensity - major bottleneck
+compute_intensity = 0.25  # Low compute intensity
 
 [profiles.rtx4090.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.88, 0.80, 0.72, 0.65, 0.58, 0.52, 0.46]
 memory_efficiency = 0.70
 tensor_core_utilization = 0.55
 architecture_multiplier = 1.38
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.8  # High memory intensity
+compute_intensity = 0.4  # Lower compute intensity
 
 # Precision performance multipliers - Gaming GPU excellent at mixed precision
 [profiles.rtx4090.precision]
@@ -264,24 +404,52 @@ architecture.rt_cores = 0
 architecture.streaming_multiprocessors = 108
 architecture.memory_bus_width = 5120
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.a100.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 1935.0
+memory_bandwidth_utilization = 0.85  # Enterprise GPU efficiency
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 19.5
+compute_tflops_fp16 = 312.0
+compute_tflops_int8 = 624.0
+compute_utilization = 0.88  # Enterprise GPU efficiency
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 0.99  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 6.20  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.a100.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.88, 0.78, 0.68, 0.58, 0.50, 0.43, 0.37]
 memory_efficiency = 0.82
 tensor_core_utilization = 0.75
 architecture_multiplier = 1.35
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.4  # Low memory intensity
+compute_intensity = 0.85  # High compute intensity
 
 [profiles.a100.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.85, 0.82, 0.75, 0.70, 0.60, 0.50, 0.45]
 memory_efficiency = 0.78
 tensor_core_utilization = 0.90
 architecture_multiplier = 1.48
+# Bottleneck characteristics - A100 excellent for LLM inference
+primary_bottleneck = "memory"  # LLMs are memory-bound, A100 excels here
+memory_intensity = 0.6  # Medium memory intensity
+compute_intensity = 0.5  # Medium compute intensity
 
 [profiles.a100.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.92, 0.85, 0.78, 0.70, 0.62, 0.55, 0.48]
 memory_efficiency = 0.72
 tensor_core_utilization = 0.60
 architecture_multiplier = 1.42
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.65  # Medium-high memory intensity
+compute_intensity = 0.55  # Medium compute intensity
 
 # Precision performance multipliers
 [profiles.a100.precision]
@@ -312,24 +480,52 @@ architecture.rt_cores = 84
 architecture.streaming_multiprocessors = 84
 architecture.memory_bus_width = 384
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.a6000.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 768.0
+memory_bandwidth_utilization = 0.75  # Professional GPU efficiency
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 38.7
+compute_tflops_fp16 = 619.0
+compute_tflops_int8 = 1238.0
+compute_utilization = 0.82  # Professional GPU efficiency
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 0.31  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 1.24  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.a6000.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.88, 0.78, 0.68, 0.58, 0.50, 0.43, 0.37]
 memory_efficiency = 0.80
 tensor_core_utilization = 0.72
 architecture_multiplier = 1.32
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.3  # Low memory intensity
+compute_intensity = 0.9  # High compute intensity
 
 [profiles.a6000.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.85, 0.78, 0.70, 0.65, 0.58, 0.50, 0.42]
 memory_efficiency = 0.75
 tensor_core_utilization = 0.85
 architecture_multiplier = 1.40
+# Bottleneck characteristics
+primary_bottleneck = "memory"  # LLMs are memory-bound
+memory_intensity = 0.85  # High memory intensity
+compute_intensity = 0.35  # Lower compute intensity
 
 [profiles.a6000.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.90, 0.82, 0.74, 0.66, 0.58, 0.52, 0.46]
 memory_efficiency = 0.70
 tensor_core_utilization = 0.58
 architecture_multiplier = 1.28
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.7  # High memory intensity
+compute_intensity = 0.5  # Medium compute intensity
 
 # Precision performance multipliers - Professional Ampere
 [profiles.a6000.precision]
@@ -360,24 +556,52 @@ architecture.rt_cores = 142
 architecture.streaming_multiprocessors = 142
 architecture.memory_bus_width = 384
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.l40s.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 864.0
+memory_bandwidth_utilization = 0.80  # Server GPU efficiency
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 91.6
+compute_tflops_fp16 = 1465.0
+compute_tflops_int8 = 2930.0
+compute_utilization = 0.85  # Server GPU efficiency
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 0.17  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 0.59  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.l40s.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.90, 0.82, 0.74, 0.66, 0.58, 0.52, 0.46]
 memory_efficiency = 0.83
 tensor_core_utilization = 0.75
 architecture_multiplier = 1.58
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.25  # Low memory intensity
+compute_intensity = 0.95  # Very high compute intensity
 
 [profiles.l40s.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.87, 0.78, 0.70, 0.65, 0.58, 0.50, 0.42]
 memory_efficiency = 0.78
 tensor_core_utilization = 0.88
 architecture_multiplier = 1.65
+# Bottleneck characteristics
+primary_bottleneck = "memory"  # LLMs are memory-bound
+memory_intensity = 0.9  # Very high memory intensity
+compute_intensity = 0.3  # Lower compute intensity
 
 [profiles.l40s.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.90, 0.82, 0.74, 0.67, 0.60, 0.54, 0.48]
 memory_efficiency = 0.75
 tensor_core_utilization = 0.62
 architecture_multiplier = 1.50
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.75  # High memory intensity
+compute_intensity = 0.45  # Lower compute intensity
 
 # Precision performance multipliers - Ada Lovelace server
 [profiles.l40s.precision]
@@ -408,24 +632,52 @@ architecture.rt_cores = 82
 architecture.streaming_multiprocessors = 82
 architecture.memory_bus_width = 384
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.rtx3090.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 936.0
+memory_bandwidth_utilization = 0.68  # Gaming GPU limitations
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 35.6
+compute_tflops_fp16 = 569.0
+compute_tflops_int8 = 1138.0
+compute_utilization = 0.72  # Gaming GPU limitations
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 0.61  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 1.64  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.rtx3090.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.88, 0.78, 0.68, 0.58, 0.50, 0.43, 0.37]
 memory_efficiency = 0.78
 tensor_core_utilization = 0.68
 architecture_multiplier = 1.28
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.3  # Low memory intensity
+compute_intensity = 0.85  # High compute intensity
 
 [profiles.rtx3090.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.82, 0.75, 0.68, 0.62, 0.55, 0.48, 0.40]
 memory_efficiency = 0.72
 tensor_core_utilization = 0.80
 architecture_multiplier = 1.35
+# Bottleneck characteristics
+primary_bottleneck = "memory"  # LLMs are memory-bound
+memory_intensity = 0.85  # High memory intensity
+compute_intensity = 0.35  # Lower compute intensity
 
 [profiles.rtx3090.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.88, 0.78, 0.70, 0.62, 0.55, 0.48, 0.42]
 memory_efficiency = 0.68
 tensor_core_utilization = 0.52
 architecture_multiplier = 1.22
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.75  # High memory intensity
+compute_intensity = 0.45  # Lower compute intensity
 
 # Precision performance multipliers - Ampere gaming
 [profiles.rtx3090.precision]
@@ -456,24 +708,52 @@ architecture.rt_cores = 0
 architecture.streaming_multiprocessors = 80
 architecture.memory_bus_width = 4096
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.v100.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 900.0
+memory_bandwidth_utilization = 0.75  # Older architecture limitations
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 15.7
+compute_tflops_fp16 = 125.0
+compute_tflops_int8 = 250.0
+compute_utilization = 0.78  # Older architecture limitations
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 1.39  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 7.20  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.v100.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.85, 0.72, 0.60, 0.50, 0.42, 0.35, 0.30]  # batch sizes 1,2,4,8,16,32,64,128
 memory_efficiency = 0.75
 tensor_core_utilization = 0.65
 architecture_multiplier = 1.25
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.4  # Low memory intensity
+compute_intensity = 0.75  # High compute intensity
 
 [profiles.v100.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.82, 0.70, 0.60, 0.50, 0.42, 0.35, 0.28]
 memory_efficiency = 0.70
 tensor_core_utilization = 0.80
 architecture_multiplier = 1.30
+# Bottleneck characteristics - V100 decent for LLM inference
+primary_bottleneck = "memory"  # LLMs are memory-bound
+memory_intensity = 0.7  # High memory intensity
+compute_intensity = 0.4  # Lower compute intensity
 
 [profiles.v100.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.90, 0.80, 0.70, 0.60, 0.50, 0.42, 0.35]
 memory_efficiency = 0.65
 tensor_core_utilization = 0.45
 architecture_multiplier = 1.15
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.7  # High memory intensity
+compute_intensity = 0.5  # Medium compute intensity
 
 # Precision performance multipliers
 [profiles.v100.precision]
@@ -505,24 +785,52 @@ architecture.rt_cores = 80
 architecture.streaming_multiprocessors = 80
 architecture.memory_bus_width = 512
 
+# Bottleneck modeling - Real hardware characteristics
+[profiles.custom_gpu.bottlenecks]
+# Memory bandwidth characteristics (GB/s)
+memory_bandwidth_gbps = 1200.0
+memory_bandwidth_utilization = 0.80  # Custom GPU efficiency
+
+# Compute characteristics (TFLOPS)
+compute_tflops_fp32 = 50.0
+compute_tflops_fp16 = 800.0
+compute_tflops_int8 = 1600.0
+compute_utilization = 0.85  # Custom GPU efficiency
+
+# Bottleneck thresholds
+memory_bound_threshold_ratio = 0.67  # memory_bandwidth_gbps / compute_tflops_fp16
+compute_bound_threshold_ratio = 1.50  # compute_tflops_fp16 / memory_bandwidth_gbps
+
 # Model type performance characteristics
 [profiles.custom_gpu.model_performance.cnn]
 batch_scaling_curve = [1.0, 0.88, 0.78, 0.68, 0.58, 0.50, 0.43, 0.37]
 memory_efficiency = 0.80
 tensor_core_utilization = 0.75
 architecture_multiplier = 1.40
+# Bottleneck characteristics
+primary_bottleneck = "compute"  # CNNs are compute-bound
+memory_intensity = 0.35  # Low memory intensity
+compute_intensity = 0.9  # High compute intensity
 
 [profiles.custom_gpu.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.85, 0.78, 0.70, 0.65, 0.58, 0.50, 0.42]
 memory_efficiency = 0.75
 tensor_core_utilization = 0.85
 architecture_multiplier = 1.50
+# Bottleneck characteristics
+primary_bottleneck = "memory"  # LLMs are memory-bound
+memory_intensity = 0.75  # High memory intensity
+compute_intensity = 0.45  # Lower compute intensity
 
 [profiles.custom_gpu.model_performance.rnn]
 batch_scaling_curve = [1.0, 0.90, 0.82, 0.74, 0.66, 0.58, 0.52, 0.46]
 memory_efficiency = 0.70
 tensor_core_utilization = 0.65
 architecture_multiplier = 1.35
+# Bottleneck characteristics
+primary_bottleneck = "mixed"  # RNNs have mixed bottlenecks
+memory_intensity = 0.65  # Medium-high memory intensity
+compute_intensity = 0.55  # Medium compute intensity
 
 # Precision performance multipliers
 [profiles.custom_gpu.precision]

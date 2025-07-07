@@ -15,7 +15,7 @@ use std::path::{ Path, PathBuf };
 use tracing::{ info, warn };
 
 /// Supported model formats for real model loading
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ModelFormat {
     /// ONNX format (.onnx files)
     Onnx,
@@ -398,6 +398,8 @@ impl RealModelLoader {
             input_shape,
             parameters_m: ((model_info.parameter_count.unwrap_or(0) as f64) / 1_000_000.0) as f32,
             flops_per_sample_g: model_info.estimated_flops_g as f32,
+            model_type: Self::infer_model_type(&model_info.name, &model_info.format),
+            precision: "fp32".to_string(), // Default precision
         }
     }
 
@@ -525,6 +527,56 @@ impl RealModelLoader {
             ModelFormat::TensorFlowKeras => "Keras".to_string(),
             ModelFormat::PyTorch => "PyTorch".to_string(),
             ModelFormat::HuggingFace => "Hugging Face Transformers".to_string(),
+        }
+    }
+
+    /// Infer model type for bottleneck analysis based on name and format
+    fn infer_model_type(name: &str, format: &ModelFormat) -> String {
+        let name_lower = name.to_lowercase();
+
+        // Check for transformer/LLM models
+        if
+            name_lower.contains("bert") ||
+            name_lower.contains("gpt") ||
+            name_lower.contains("transformer") ||
+            name_lower.contains("distilbert") ||
+            name_lower.contains("bart") ||
+            name_lower.contains("t5") ||
+            name_lower.contains("llama") ||
+            name_lower.contains("mistral") ||
+            name_lower.contains("qwen") ||
+            name_lower.contains("gemma") ||
+            name_lower.contains("phi") ||
+            name_lower.contains("deepseek") ||
+            format == &ModelFormat::HuggingFace
+        {
+            return "transformer".to_string();
+        }
+
+        // Check for CNN models
+        if
+            name_lower.contains("resnet") ||
+            name_lower.contains("alexnet") ||
+            name_lower.contains("vgg") ||
+            name_lower.contains("mobilenet") ||
+            name_lower.contains("efficientnet") ||
+            name_lower.contains("inception") ||
+            name_lower.contains("yolo") ||
+            name_lower.contains("cnn") ||
+            name_lower.contains("vision")
+        {
+            return "cnn".to_string();
+        }
+
+        // Check for RNN models
+        if name_lower.contains("lstm") || name_lower.contains("gru") || name_lower.contains("rnn") {
+            return "rnn".to_string();
+        }
+
+        // Default based on format
+        match format {
+            ModelFormat::HuggingFace => "transformer".to_string(),
+            _ => "cnn".to_string(), // Default to CNN for unknown models
         }
     }
 }

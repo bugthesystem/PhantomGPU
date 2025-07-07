@@ -535,6 +535,17 @@ pub async fn benchmark_pretrained_model(
         crate::cli::PretrainedModel::CodeLlama13b => model_config_to_model_info("Code Llama 13B"),
         crate::cli::PretrainedModel::CodeLlama34b => model_config_to_model_info("Code Llama 34B"),
 
+        // Popular Modern LLMs
+        crate::cli::PretrainedModel::Qwen25_7b => model_config_to_model_info("Qwen2.5 7B"),
+        crate::cli::PretrainedModel::Qwen25_14b => model_config_to_model_info("Qwen2.5 14B"),
+        crate::cli::PretrainedModel::Mistral7b => model_config_to_model_info("Mistral 7B"),
+        crate::cli::PretrainedModel::Mistral22b => model_config_to_model_info("Mistral 22B"),
+        crate::cli::PretrainedModel::DeepSeekV3 => model_config_to_model_info("DeepSeek V3"),
+        crate::cli::PretrainedModel::Phi35Mini => model_config_to_model_info("Phi-3.5 Mini"),
+        crate::cli::PretrainedModel::Phi35Medium => model_config_to_model_info("Phi-3.5 Medium"),
+        crate::cli::PretrainedModel::Gemma2_9b => model_config_to_model_info("Gemma 2 9B"),
+        crate::cli::PretrainedModel::Gemma2_27b => model_config_to_model_info("Gemma 2 27B"),
+
         // Vision Transformers
         crate::cli::PretrainedModel::VitBase16 => model_config_to_model_info("ViT-Base/16"),
         crate::cli::PretrainedModel::VitLarge16 => model_config_to_model_info("ViT-Large/16"),
@@ -653,6 +664,17 @@ pub async fn compare_gpus_with_model(
         crate::cli::PretrainedModel::CodeLlama7b => model_config_to_model_info("Code Llama 7B"),
         crate::cli::PretrainedModel::CodeLlama13b => model_config_to_model_info("Code Llama 13B"),
         crate::cli::PretrainedModel::CodeLlama34b => model_config_to_model_info("Code Llama 34B"),
+
+        // Popular Modern LLMs
+        crate::cli::PretrainedModel::Qwen25_7b => model_config_to_model_info("Qwen2.5 7B"),
+        crate::cli::PretrainedModel::Qwen25_14b => model_config_to_model_info("Qwen2.5 14B"),
+        crate::cli::PretrainedModel::Mistral7b => model_config_to_model_info("Mistral 7B"),
+        crate::cli::PretrainedModel::Mistral22b => model_config_to_model_info("Mistral 22B"),
+        crate::cli::PretrainedModel::DeepSeekV3 => model_config_to_model_info("DeepSeek V3"),
+        crate::cli::PretrainedModel::Phi35Mini => model_config_to_model_info("Phi-3.5 Mini"),
+        crate::cli::PretrainedModel::Phi35Medium => model_config_to_model_info("Phi-3.5 Medium"),
+        crate::cli::PretrainedModel::Gemma2_9b => model_config_to_model_info("Gemma 2 9B"),
+        crate::cli::PretrainedModel::Gemma2_27b => model_config_to_model_info("Gemma 2 27B"),
 
         // Vision Transformers
         crate::cli::PretrainedModel::VitBase16 => model_config_to_model_info("ViT-Base/16"),

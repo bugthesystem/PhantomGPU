@@ -208,6 +208,49 @@ impl TensorFlowParser {
     }
 }
 
+/// Helper for TensorFlow model type inference
+impl TensorFlowAnalysis {
+    /// Infer model type for bottleneck analysis based on name and format
+    fn infer_tensorflow_model_type(name: &str, format: &str) -> String {
+        let name_lower = name.to_lowercase();
+        let format_lower = format.to_lowercase();
+
+        // Check for transformer/LLM models
+        if
+            name_lower.contains("bert") ||
+            name_lower.contains("transformer") ||
+            name_lower.contains("distilbert") ||
+            name_lower.contains("t5") ||
+            format_lower.contains("nlp") ||
+            format_lower.contains("text")
+        {
+            return "transformer".to_string();
+        }
+
+        // Check for CNN models (most TensorFlow models are CNNs)
+        if
+            name_lower.contains("resnet") ||
+            name_lower.contains("mobilenet") ||
+            name_lower.contains("efficientnet") ||
+            name_lower.contains("inception") ||
+            name_lower.contains("yolo") ||
+            name_lower.contains("cnn") ||
+            name_lower.contains("vision") ||
+            format_lower.contains("vision")
+        {
+            return "cnn".to_string();
+        }
+
+        // Check for RNN models
+        if name_lower.contains("lstm") || name_lower.contains("gru") || name_lower.contains("rnn") {
+            return "rnn".to_string();
+        }
+
+        // Default to CNN for TensorFlow models
+        "cnn".to_string()
+    }
+}
+
 /// Convert TensorFlow analysis to our internal model representation
 impl From<TensorFlowAnalysis> for crate::models::ModelConfig {
     fn from(analysis: TensorFlowAnalysis) -> Self {
@@ -224,7 +267,7 @@ impl From<TensorFlowAnalysis> for crate::models::ModelConfig {
             .unwrap_or_else(|| vec![224, 224, 3]); // Default
 
         Self {
-            name: analysis.model_name,
+            name: analysis.model_name.clone(),
             batch_size: 1, // Default batch size
             input_shape,
             parameters_m: (analysis.total_parameters as f32) / 1_000_000.0, // Convert to millions
@@ -235,6 +278,11 @@ impl From<TensorFlowAnalysis> for crate::models::ModelConfig {
                     .sum::<i64>();
                 (total_flops as f32) / 1_000_000_000.0 // Convert to billions
             },
+            model_type: TensorFlowAnalysis::infer_tensorflow_model_type(
+                &analysis.model_name,
+                &analysis.format
+            ),
+            precision: "fp32".to_string(), // Default precision
         }
     }
 }
