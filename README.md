@@ -133,6 +133,7 @@ GPU Validation Results:
 - **TensorFlow**: SavedModel, frozen graphs, TensorFlow Lite, Keras
 - **PyTorch**: Model files (.pth, .pt)
 - **ONNX**: Standard ONNX models (.onnx)
+- **Candle** Minimalist ML framework for Rust
 - **HuggingFace**: Direct loading from HuggingFace Hub
 
 ## Installation
