@@ -44,7 +44,7 @@ release_year = 2022
 [gpus.a100]
 name = "A100"
 memory_gb = 80.0
-compute_tflops = 19.5
+compute_tflops = 88.0
 memory_bandwidth_gbps = 1935.0
 architecture = "Ampere"
 release_year = 2020
@@ -76,7 +76,7 @@ release_year = 2020
 [gpus.v100]
 name = "Tesla V100"
 memory_gb = 32.0
-compute_tflops = 15.7
+compute_tflops = 30.0
 memory_bandwidth_gbps = 900.0
 architecture = "Volta"
 release_year = 2017

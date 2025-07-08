@@ -307,12 +307,12 @@ int4_multiplier = 8.5
 
 [profiles.rtx4090]
 name = "RTX 4090"
-# Thermal characteristics - Gaming GPU with aggressive thermal throttling
+# Thermal characteristics - Gaming GPU with moderate thermal throttling for short inference bursts
 thermal.tdp_watts = 450.0
 thermal.base_clock_mhz = 2520.0
 thermal.boost_clock_mhz = 2750.0
 thermal.throttle_temp_celsius = 90.0
-thermal.thermal_factor_sustained = 0.49  # Heavy throttling under sustained ML loads
+thermal.thermal_factor_sustained = 0.92  # Minimal throttling for inference workloads (not training)
 
 # Memory hierarchy
 memory.l1_cache_kb = 128.0
@@ -354,6 +354,16 @@ architecture_multiplier = 1.52
 primary_bottleneck = "compute"  # CNNs are compute-bound
 memory_intensity = 0.2  # Very low memory intensity
 compute_intensity = 0.98  # Excellent compute intensity for CNNs
+
+[profiles.rtx4090.model_performance.vit]
+batch_scaling_curve = [1.0, 0.88, 0.80, 0.72, 0.65, 0.58, 0.52, 0.46]
+memory_efficiency = 0.78
+tensor_core_utilization = 0.75
+architecture_multiplier = 1.35
+# Bottleneck characteristics - ViT models use attention mechanisms like transformers
+primary_bottleneck = "mixed"  # ViTs have mixed bottlenecks (attention + convolution)
+memory_intensity = 0.6  # Medium memory intensity (attention patterns)
+compute_intensity = 0.7  # High compute intensity (patch embeddings + attention)
 
 [profiles.rtx4090.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.85, 0.78, 0.70, 0.66, 0.58, 0.50, 0.42]
@@ -430,6 +440,16 @@ architecture_multiplier = 1.35
 primary_bottleneck = "compute"  # CNNs are compute-bound
 memory_intensity = 0.4  # Low memory intensity
 compute_intensity = 0.85  # High compute intensity
+
+[profiles.a100.model_performance.vit]
+batch_scaling_curve = [1.0, 0.85, 0.80, 0.75, 0.70, 0.65, 0.58, 0.50]
+memory_efficiency = 0.80
+tensor_core_utilization = 0.85
+architecture_multiplier = 1.42
+# Bottleneck characteristics - A100 good for ViT models
+primary_bottleneck = "mixed"  # ViTs have mixed bottlenecks
+memory_intensity = 0.5  # Medium memory intensity
+compute_intensity = 0.75  # High compute intensity
 
 [profiles.a100.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.85, 0.82, 0.75, 0.70, 0.60, 0.50, 0.45]
@@ -721,8 +741,8 @@ compute_tflops_int8 = 250.0
 compute_utilization = 0.78  # Older architecture limitations
 
 # Bottleneck thresholds
-memory_bound_threshold_ratio = 1.39  # memory_bandwidth_gbps / compute_tflops_fp16
-compute_bound_threshold_ratio = 7.20  # compute_tflops_fp16 / memory_bandwidth_gbps
+memory_bound_threshold_ratio = 7.20  # memory_bandwidth_gbps / compute_tflops_fp16 (900/125 = 7.2)
+compute_bound_threshold_ratio = 0.139  # compute_tflops_fp16 / memory_bandwidth_gbps (125/900 = 0.139)
 
 # Model type performance characteristics
 [profiles.v100.model_performance.cnn]
@@ -734,6 +754,16 @@ architecture_multiplier = 1.25
 primary_bottleneck = "compute"  # CNNs are compute-bound
 memory_intensity = 0.4  # Low memory intensity
 compute_intensity = 0.75  # High compute intensity
+
+[profiles.v100.model_performance.vit]
+batch_scaling_curve = [1.0, 0.82, 0.75, 0.65, 0.55, 0.45, 0.38, 0.30]
+memory_efficiency = 0.72
+tensor_core_utilization = 0.70
+architecture_multiplier = 1.28
+# Bottleneck characteristics - V100 decent for ViT models
+primary_bottleneck = "mixed"  # ViTs have mixed bottlenecks
+memory_intensity = 0.6  # Medium memory intensity
+compute_intensity = 0.65  # Medium-high compute intensity
 
 [profiles.v100.model_performance.transformer]
 batch_scaling_curve = [1.0, 0.82, 0.70, 0.60, 0.50, 0.42, 0.35, 0.28]

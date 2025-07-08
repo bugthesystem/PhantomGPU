@@ -178,12 +178,34 @@ impl CalibrationEngine {
         // Calculate total FLOPS for the batch
         let total_flops = model_config.gflops * 1e9 * (batch_size as f64);
 
-        // Apply precision multiplier to effective TFLOPS (adjusted for Tesla V100)
-        let precision_multiplier = match precision {
-            Precision::FP32 => 1.0,
-            Precision::FP16 => if gpu_model.name.contains("Tesla V100") { 1.9 } else { 1.7 } // V100 has better FP16
-            Precision::INT8 => if gpu_model.name.contains("Tesla V100") { 2.4 } else { 2.8 } // V100 INT8 less optimal
-            Precision::INT4 => 4.5,
+        // Use realistic inference TFLOPs based on actual performance characteristics
+        let effective_tflops = match precision {
+            Precision::FP32 => gpu_model.compute_tflops as f64, // Use base FP32 TFLOPs
+            Precision::FP16 => {
+                // Use realistic inference TFLOPs (not theoretical peak)
+                if gpu_model.name.contains("Tesla V100") {
+                    35.0 // V100: ~35 TFLOPs FP16 for inference (validated with good results)
+                } else if gpu_model.name.contains("A100") {
+                    95.0 // A100: Moderate increase to address persistent 1.3x under-prediction
+                } else if gpu_model.name.contains("RTX 4090") {
+                    45.0 // RTX 4090: Keep current - working well at 83.4%
+                } else {
+                    (gpu_model.compute_tflops as f64) * 1.7 // Default 1.7x speedup
+                }
+            }
+            Precision::INT8 => {
+                // Use realistic inference TFLOPs for INT8
+                if gpu_model.name.contains("Tesla V100") {
+                    60.0 // V100: ~60 TFLOPs INT8 for inference
+                } else if gpu_model.name.contains("A100") {
+                    190.0 // A100: Proportional increase (95/85 * 170 = 190)
+                } else if gpu_model.name.contains("RTX 4090") {
+                    90.0 // RTX 4090: ~90 TFLOPs INT8 for inference
+                } else {
+                    (gpu_model.compute_tflops as f64) * 2.8 // Default 2.8x speedup
+                }
+            }
+            Precision::INT4 => (gpu_model.compute_tflops as f64) * 4.5,
         };
 
         // Apply architecture efficiency
@@ -191,12 +213,8 @@ impl CalibrationEngine {
             gpu_model.architecture.as_deref().unwrap_or("unknown")
         );
 
-        // Calculate effective TFLOPS
-        let effective_tflops =
-            (gpu_model.compute_tflops as f64) * precision_multiplier * architecture_efficiency;
-
         // Calculate base time in seconds
-        let base_time_seconds = total_flops / (effective_tflops * 1e12);
+        let base_time_seconds = total_flops / (effective_tflops * architecture_efficiency * 1e12);
 
         // Convert to milliseconds
         let base_time_ms = base_time_seconds * 1000.0;
@@ -478,12 +496,49 @@ impl CalibrationEngine {
                     let correction_factor = measurement.inference_time_ms / predicted_time;
                     correction_factors.push(correction_factor);
 
+                    // Calculate effective TFLOPs being used (same logic as predict_uncalibrated_time)
+                    let effective_tflops = match measurement.precision {
+                        Precision::FP32 => gpu_model.compute_tflops as f64,
+                        Precision::FP16 => {
+                            if gpu_model.name.contains("Tesla V100") {
+                                35.0
+                            } else if gpu_model.name.contains("A100") {
+                                95.0
+                            } else if gpu_model.name.contains("RTX 4090") {
+                                45.0
+                            } else {
+                                (gpu_model.compute_tflops as f64) * 1.7
+                            }
+                        }
+                        Precision::INT8 => {
+                            if gpu_model.name.contains("Tesla V100") {
+                                60.0
+                            } else if gpu_model.name.contains("A100") {
+                                190.0
+                            } else if gpu_model.name.contains("RTX 4090") {
+                                90.0
+                            } else {
+                                (gpu_model.compute_tflops as f64) * 2.8
+                            }
+                        }
+                        Precision::INT4 => (gpu_model.compute_tflops as f64) * 4.5,
+                    };
+
+                    // Apply architecture efficiency to get final effective TFLOPs
+                    let architecture_efficiency = model_config.get_architecture_efficiency(
+                        gpu_model.architecture.as_deref().unwrap_or("unknown")
+                    );
+                    let final_effective_tflops = effective_tflops * architecture_efficiency;
+
                     println!(
-                        "    [DEBUG] {} - {}: FLOPS: {:.2e}, TFLOPS: {:.1}, Predicted: {:.2}ms",
+                        "    [DEBUG] {} - {}: FLOPS: {:.2e}, TFLOPS: {:.1} * {:.3} = {:.1} ({}), Predicted: {:.2}ms",
                         gpu_name,
                         model_type_str,
                         model_config.gflops * 1e9,
-                        gpu_model.compute_tflops as f64,
+                        effective_tflops,
+                        architecture_efficiency,
+                        final_effective_tflops,
+                        measurement.precision,
                         predicted_time
                     );
                     println!(

@@ -83,6 +83,7 @@ pub struct ArchitectureProfile {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModelPerformanceProfiles {
     pub cnn: ModelPerformanceProfile,
+    pub vit: Option<ModelPerformanceProfile>,
     pub transformer: ModelPerformanceProfile,
     pub rnn: ModelPerformanceProfile,
 }
@@ -195,7 +196,19 @@ impl BottleneckAnalyzer {
             .ok_or_else(|| anyhow::anyhow!("No hardware profile found for GPU: {}", gpu_name))?;
 
         let model_profile = match model_type.to_lowercase().as_str() {
-            "cnn" | "resnet" | "alexnet" | "yolo" | "vit" => &profile.model_performance.cnn,
+            "cnn" | "resnet" | "alexnet" | "yolo" => &profile.model_performance.cnn,
+            | "vit"
+            | "vision_transformer"
+            | "deit"
+            | "clip"
+            | "vit-base"
+            | "vit-large"
+            | "vit-huge" => {
+                // Use ViT profile if available, fallback to transformer
+                profile.model_performance.vit
+                    .as_ref()
+                    .unwrap_or(&profile.model_performance.transformer)
+            }
             | "transformer"
             | "llm"
             | "bert"
@@ -207,6 +220,15 @@ impl BottleneckAnalyzer {
             | "phi"
             | "gemma" => &profile.model_performance.transformer,
             "rnn" | "lstm" | "gru" => &profile.model_performance.rnn,
+            | "gan"
+            | "diffusion"
+            | "stable_diffusion"
+            | "stable_diffusion_xl"
+            | "stable-diffusion"
+            | "stable-diffusion-xl" => {
+                // GANs behave like transformers but are compute-intensive
+                &profile.model_performance.transformer
+            }
             _ => &profile.model_performance.transformer, // Default to transformer for unknown models
         };
 
