@@ -36,7 +36,7 @@ release_year = 2025
 [gpus.rtx4090]
 name = "RTX 4090"
 memory_gb = 24.0
-compute_tflops = 35.0
+compute_tflops = 42.0
 memory_bandwidth_gbps = 1008.0
 architecture = "Ada Lovelace"
 release_year = 2022
@@ -76,8 +76,8 @@ release_year = 2020
 [gpus.v100]
 name = "Tesla V100"
 memory_gb = 32.0
-compute_tflops = 30.0
-memory_bandwidth_gbps = 900.0
+compute_tflops = 27.0
+memory_bandwidth_gbps = 750.0
 architecture = "Volta"
 release_year = 2017
 

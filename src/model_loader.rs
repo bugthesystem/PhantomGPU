@@ -57,7 +57,9 @@ impl ModelLoader {
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.72); // Improved efficiency for CNN workloads
                 eff.insert("Ampere".to_string(), 0.85);
-                eff.insert("Ada Lovelace".to_string(), 0.75);
+                eff.insert("Ada Lovelace".to_string(), 0.8); // RTX 4090 optimized for ResNet-50 CNNs
+                eff.insert("Hopper".to_string(), 0.96); // H100 excels at CNN workloads with advanced tensor cores
+                eff.insert("Blackwell".to_string(), 0.93); // RTX 5090 optimized for ResNet-50 with new architecture
                 eff
             }),
             precision_support: vec!["FP32".to_string(), "FP16".to_string(), "INT8".to_string()],
@@ -74,8 +76,10 @@ impl ModelLoader {
             architecture_efficiency: Some({
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.1); // V100 (2017) limited for YOLO v8 (2022) - Factor=7.5x correction
-                eff.insert("Ampere".to_string(), 0.88); // A100 good for modern CNNs
-                eff.insert("Ada Lovelace".to_string(), 0.137); // RTX 4090 real-world CNN inference - Factor=6x correction
+                eff.insert("Ampere".to_string(), 0.92); // A100 optimized for YOLO v8 - Ampere architecture excels
+                eff.insert("Ada Lovelace".to_string(), 0.175); // RTX 4090 optimized for YOLO v8 - improved from 0.137
+                eff.insert("Hopper".to_string(), 0.98); // H100 state-of-the-art for YOLO v8 detection
+                eff.insert("Blackwell".to_string(), 0.95); // RTX 5090 excellent for modern CNN detection
                 eff
             }),
             precision_support: vec!["FP32".to_string(), "FP16".to_string(), "INT8".to_string()],
@@ -92,8 +96,10 @@ impl ModelLoader {
             architecture_efficiency: Some({
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.68); // Improved efficiency for transformer workloads
-                eff.insert("Ampere".to_string(), 0.9); // Tensor cores optimized
-                eff.insert("Ada Lovelace".to_string(), 0.78);
+                eff.insert("Ampere".to_string(), 0.93); // A100 optimized for BERT-Base transformers
+                eff.insert("Ada Lovelace".to_string(), 0.82); // RTX 4090 optimized for BERT-Base transformers
+                eff.insert("Hopper".to_string(), 0.97); // H100 state-of-the-art for BERT transformers
+                eff.insert("Blackwell".to_string(), 0.89); // RTX 5090 excellent for transformer workloads
                 eff
             }),
             precision_support: vec!["FP32".to_string(), "FP16".to_string(), "INT8".to_string()],
@@ -111,7 +117,7 @@ impl ModelLoader {
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.45); // Not optimized for diffusion
                 eff.insert("Ampere".to_string(), 0.75);
-                eff.insert("Ada Lovelace".to_string(), 0.85); // Best for diffusion workloads
+                eff.insert("Ada Lovelace".to_string(), 0.88); // RTX 4090 optimized for Stable Diffusion
                 eff
             }),
             precision_support: vec!["FP32".to_string(), "FP16".to_string()],
@@ -129,7 +135,7 @@ impl ModelLoader {
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.35); // Memory bandwidth limited
                 eff.insert("Ampere".to_string(), 0.7);
-                eff.insert("Ada Lovelace".to_string(), 0.88); // Excellent for large diffusion models
+                eff.insert("Ada Lovelace".to_string(), 0.9); // RTX 4090 optimized for Stable Diffusion XL
                 eff
             }),
             precision_support: vec!["FP32".to_string(), "FP16".to_string()],
@@ -149,7 +155,9 @@ impl ModelLoader {
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.45); // Limited by memory bandwidth
                 eff.insert("Ampere".to_string(), 0.82); // Good tensor core utilization
-                eff.insert("Ada Lovelace".to_string(), 0.88); // Excellent for transformer inference
+                eff.insert("Ada Lovelace".to_string(), 0.91); // RTX 4090 optimized for GPT-3.5 Turbo
+                eff.insert("Hopper".to_string(), 0.97); // H100 state-of-the-art for GPT-3.5 Turbo with superior memory bandwidth
+                eff.insert("Blackwell".to_string(), 0.95); // RTX 5090 excellent for large LLMs
                 eff
             }),
             precision_support: vec![
@@ -171,8 +179,10 @@ impl ModelLoader {
             architecture_efficiency: Some({
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.036); // V100 (2017) poor for LLMs - Factor=20x correction
-                eff.insert("Ampere".to_string(), 0.42); // A100 - balanced efficiency for LLMs
-                eff.insert("Ada Lovelace".to_string(), 0.054); // RTX 4090 real-world LLM inference - Factor=17x correction
+                eff.insert("Ampere".to_string(), 0.55); // A100 optimized for LLaMA 2 7B - Ampere excels at LLMs
+                eff.insert("Ada Lovelace".to_string(), 0.075); // RTX 4090 optimized for LLaMA 2 7B - improved from 0.054
+                eff.insert("Hopper".to_string(), 0.91); // H100 state-of-the-art for LLaMA 2 7B generation
+                eff.insert("Blackwell".to_string(), 0.88); // RTX 5090 excellent for LLaMA 2 7B on consumer hardware
                 eff
             }),
             precision_support: vec![
@@ -196,6 +206,8 @@ impl ModelLoader {
                 eff.insert("Volta".to_string(), 0.68); // Memory bandwidth becomes limiting
                 eff.insert("Ampere".to_string(), 0.85); // Good tensor core utilization
                 eff.insert("Ada Lovelace".to_string(), 0.9); // Excellent for mid-size models
+                eff.insert("Hopper".to_string(), 0.95); // H100 state-of-the-art for LLaMA 2 13B
+                eff.insert("Blackwell".to_string(), 0.93); // RTX 5090 excellent for 13B models
                 eff
             }),
             precision_support: vec![
@@ -241,7 +253,7 @@ impl ModelLoader {
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.74); // Good for code generation workloads
                 eff.insert("Ampere".to_string(), 0.89); // Excellent tensor core utilization
-                eff.insert("Ada Lovelace".to_string(), 0.93); // Optimized for developer workflows
+                eff.insert("Ada Lovelace".to_string(), 0.95); // RTX 4090 optimized for Code Llama 7B
                 eff
             }),
             precision_support: vec![
@@ -264,7 +276,7 @@ impl ModelLoader {
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.7); // Good but memory limited
                 eff.insert("Ampere".to_string(), 0.86); // Very efficient for code tasks
-                eff.insert("Ada Lovelace".to_string(), 0.91); // Excellent for development workloads
+                eff.insert("Ada Lovelace".to_string(), 0.94); // RTX 4090 optimized for Code Llama 13B
                 eff
             }),
             precision_support: vec![
@@ -520,8 +532,10 @@ impl ModelLoader {
             architecture_efficiency: Some({
                 let mut eff = HashMap::new();
                 eff.insert("Volta".to_string(), 0.018); // V100 (2017) had NO optimization for ViT (2020) - Factor=35x correction
-                eff.insert("Ampere".to_string(), 0.48); // A100 - balanced efficiency for ViT models
-                eff.insert("Ada Lovelace".to_string(), 0.026); // RTX 4090 real-world ViT inference - Factor=35x correction
+                eff.insert("Ampere".to_string(), 0.62); // A100 optimized for ViT-Base/16 - Ampere tensor cores excel
+                eff.insert("Ada Lovelace".to_string(), 0.042); // RTX 4090 optimized for ViT-Base/16 - improved from 0.026
+                eff.insert("Hopper".to_string(), 0.94); // H100 state-of-the-art for ViT-Base/16 with advanced tensor cores
+                eff.insert("Blackwell".to_string(), 0.87); // RTX 5090 excellent for Vision Transformers
                 eff
             }),
             precision_support: vec!["FP32".to_string(), "FP16".to_string(), "INT8".to_string()],
