@@ -22,6 +22,9 @@ pub mod neural_network_demo;
 pub mod model_loader;
 pub mod model_benchmarks;
 pub mod cloud_cost_estimator;
+pub mod thermal_modeling;
+pub mod batch_optimizer;
+pub mod power_modeling;
 
 // Real model support
 #[cfg(feature = "real-models")]
@@ -141,6 +144,74 @@ async fn run() -> PhantomResult<()> {
 
         Commands::ListGpus => {
             commands::handle_list_gpus_command()?;
+        }
+
+        Commands::Thermal { gpu, workload, duration, ambient, verbose } => {
+            let gpu_model = gpu.to_gpu_model();
+            println!(
+                "\n{}",
+                format!(
+                    "🔥 Thermal Modeling: {} ({}% load)",
+                    gpu_model.name.yellow(),
+                    (workload * 100.0) as u32
+                ).bold()
+            );
+            commands::handle_thermal_command(
+                &gpu_model,
+                workload,
+                duration,
+                ambient,
+                verbose
+            ).await?;
+        }
+
+        Commands::Optimize { gpu, model, target_utilization, verbose } => {
+            let gpu_model = gpu.to_gpu_model();
+            println!(
+                "\n{}",
+                format!(
+                    "⚡ Batch Optimization: {} on {}",
+                    model.cyan(),
+                    gpu_model.name.yellow()
+                ).bold()
+            );
+            commands::handle_optimize_command(
+                &gpu_model,
+                &model,
+                target_utilization,
+                verbose
+            ).await?;
+        }
+
+        Commands::Power {
+            gpu,
+            workload,
+            duration,
+            performance,
+            energy_cost,
+            include_thermal,
+            compare,
+            verbose,
+        } => {
+            let gpu_model = gpu.to_gpu_model();
+            println!(
+                "\n{}",
+                format!(
+                    "🔋 Power Analysis: {} workload on {}",
+                    workload.cyan(),
+                    gpu_model.name.yellow()
+                ).bold()
+            );
+            commands::handle_power_command(
+                &gpu_model,
+                &workload,
+                duration,
+                performance,
+                energy_cost,
+                include_thermal,
+                compare,
+                verbose
+            ).await?;
         }
 
         #[cfg(feature = "real-models")]

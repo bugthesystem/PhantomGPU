@@ -112,6 +112,83 @@ pub enum Commands {
     /// List available GPU models (basic specs)
     ListGpus,
 
+    /// Thermal modeling and monitoring
+    Thermal {
+        /// GPU to model thermal behavior
+        #[arg(short, long, value_enum, default_value = "a100")]
+        gpu: GpuType,
+
+        /// Workload intensity (0.0 to 1.0)
+        #[arg(short, long, default_value = "0.8")]
+        workload: f64,
+
+        /// Simulation duration in seconds
+        #[arg(short, long, default_value = "300")]
+        duration: u64,
+
+        /// Ambient temperature in Celsius
+        #[arg(short, long, default_value = "25")]
+        ambient: f64,
+
+        /// Show detailed thermal curves
+        #[arg(long)]
+        verbose: bool,
+    },
+
+    /// Batch size optimization for models
+    Optimize {
+        /// GPU to optimize for
+        #[arg(short, long, value_enum, default_value = "a100")]
+        gpu: GpuType,
+
+        /// Model to optimize batch size for
+        #[arg(short, long, default_value = "llama2-7b")]
+        model: String,
+
+        /// Target memory utilization (0.0 to 1.0)
+        #[arg(short, long, default_value = "0.8")]
+        target_utilization: f64,
+
+        /// Show detailed batch analysis
+        #[arg(long)]
+        verbose: bool,
+    },
+
+    /// Power consumption and efficiency analysis
+    Power {
+        /// GPU to analyze power consumption
+        #[arg(short, long, value_enum, default_value = "a100")]
+        gpu: GpuType,
+
+        /// Workload type to analyze
+        #[arg(short, long, default_value = "LLM")]
+        workload: String,
+
+        /// Simulation duration in seconds
+        #[arg(short, long, default_value = "3600")]
+        duration: u64,
+
+        /// Performance score for efficiency calculations
+        #[arg(short, long, default_value = "100.0")]
+        performance: f64,
+
+        /// Energy cost per kWh (USD)
+        #[arg(short, long, default_value = "0.12")]
+        energy_cost: f64,
+
+        /// Include thermal modeling
+        #[arg(long)]
+        include_thermal: bool,
+
+        /// Compare against other GPUs
+        #[arg(long)]
+        compare: bool,
+
+        /// Show detailed power breakdown
+        #[arg(long)]
+        verbose: bool,
+    },
+
     #[cfg(feature = "real-models")]
     /// List detailed hardware profiles for realistic performance modeling
     ListHardware {
