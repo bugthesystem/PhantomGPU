@@ -271,6 +271,22 @@ pub enum Commands {
         #[arg(long)]
         benchmark_data: Option<String>,
 
+        /// Include gaming performance validation
+        #[arg(long)]
+        gaming: bool,
+
+        /// Show detailed validation report
+        #[arg(long)]
+        verbose: bool,
+    },
+
+    /// Validate PhantomGPU gaming accuracy (available without real-models feature)
+    #[cfg(not(feature = "real-models"))]
+    Validate {
+        /// Include gaming performance validation
+        #[arg(long, default_value = "true")]
+        gaming: bool,
+
         /// Show detailed validation report
         #[arg(long)]
         verbose: bool,

@@ -1,8 +1,8 @@
 # PhantomGPU 👻
 
-**Test ML models on any GPU before you buy it**
+**Test ML models and gaming performance on any GPU before you buy it**
 
-PhantomGPU is a GPU performance emulator that lets you benchmark ML models on virtual GPUs with **validated accuracy**. Compare performance across different GPUs and estimate costs without access to physical hardware.
+PhantomGPU is a comprehensive GPU performance emulator that lets you benchmark ML models and gaming workloads on virtual GPUs with **validated accuracy**. Compare performance across different GPUs and estimate costs without access to physical hardware.
 
 ## Why PhantomGPU?
 
@@ -10,6 +10,7 @@ PhantomGPU is a GPU performance emulator that lets you benchmark ML models on vi
 - **📊 Make Informed Decisions**: Compare 10+ GPUs with real performance data
 - **🎯 Validated Accuracy**: 86.1% overall accuracy, A100 at 92.1% (**Good** status)
 - **🤖 Modern AI Models**: 30+ models including LLaMA, ViT, YOLO, Stable Diffusion
+- **🎮 Gaming Performance**: Predict FPS, DLSS/FSR performance, frame generation analysis
 - **🌡️ Advanced Modeling**: Thermal simulation, batch optimization, power efficiency analysis
 - **⚡ Next-Gen GPUs**: H100, H200, RTX 5090, Blackwell architecture support
 
@@ -42,8 +43,24 @@ cargo build --release --features real-models
 ./target/release/phantom-gpu thermal \
   --gpu rtx5090 --workload 0.8 --duration 600
 
-# Validate accuracy against real hardware
-./target/release/phantom-gpu validate
+# Gaming performance prediction with ray tracing and DLSS
+./target/release/phantom-gpu gaming \
+  --gpu rtx4090 --game cyberpunk --resolution 2560x1440 \
+  --ray-tracing --dlss quality --target-fps 60
+
+# Gaming performance with frame generation and thermal analysis
+./target/release/phantom-gpu gaming \
+  --gpu rtx5090 --game fortnite --resolution 3840x2160 \
+  --frame-generation --thermal-session --power-analysis
+
+# Validate ML accuracy against real hardware (requires real-models feature)
+./target/release/phantom-gpu validate --verbose
+
+# Validate gaming accuracy with detailed results
+./target/release/phantom-gpu validate --gaming --verbose
+
+# Validate both ML and gaming accuracy together (requires real-models feature)
+./target/release/phantom-gpu validate --gaming --verbose
 ```
 
 ## Current Accuracy Status
@@ -173,21 +190,67 @@ llama2-7b     RTX 4090      8        14.8         540.5         29200
 💰 Best Value: RTX 4090 (540.5 samples/sec, consumer price)
 ```
 
+### Gaming Performance Analysis
+```bash
+$ ./target/release/phantom-gpu gaming \
+  --gpu rtx4090 --game cyberpunk --resolution 2560x1440 \
+  --ray-tracing --dlss quality --power-analysis --verbose
+
+🎮 Gaming Performance Analysis
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 Performance Prediction
+📊 Performance Results
+  Average FPS: 85.2
+  1% Low FPS: 63.9
+  Frame Time: 11.7ms
+  Frame Consistency: Good
+  GPU Utilization: 94.3%
+  Memory Utilization: 78.1%
+  Temperature: 83.2°C
+
+🔋 Power Consumption Analysis
+📊 Power Breakdown
+  Total Power: 425W
+  Base Power: 127W
+  Rendering Power: 255W
+  Memory Power: 43W
+
+🎨 Graphics Settings
+  Texture Quality: High
+  Ray Tracing: ✅ Enabled
+  DLSS: Quality (1.5x upscaling)
+```
+
 ### Validate System Accuracy
 ```bash
-$ ./target/release/phantom-gpu validate
+$ ./target/release/phantom-gpu validate --gaming --verbose
 
-🎯 PhantomGPU Accuracy Validation
+🎯 Validating PhantomGPU Accuracy
+
+🎯 PhantomGPU Accuracy Report
 ==================================================
 
-GPU Validation Results:
-🟠 A100:        80.1% accuracy (±19.9% error) - Fair  
-🟠 RTX 4090:    82.6% accuracy (±17.4% error) - Fair  
-🔴 Tesla V100:  77.9% accuracy (±22.1% error) - Needs Improvement
+GPU: Tesla V100
+  Accuracy: 77.2% (±22.8% error) 🔴 Needs Improvement
 
-📊 Overall System: 80.2% accuracy (±19.8% error)
-🎯 Status: Validated using 37-fold cross-validation against real hardware
-💡 Baseline reflects realistic workload performance, not theoretical peaks
+GPU: RTX 4090
+  Accuracy: 89.1% (±10.9% error) 🟠 Fair
+
+GPU: A100
+  Accuracy: 92.1% (±7.9% error) 🟡 Good
+
+🎮 Gaming Accuracy Validation
+
+🎯 Gaming Accuracy Test Results
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Overall Accuracy: 54.0%
+✅ Passed: 0/3 tests
+
+📋 Detailed Results:
+  RTX 4090 - Cyberpunk 2077: 44.4% accuracy (±55.6% error) - ❌ FAIL
+  RTX 4090 - Fortnite: 77.6% accuracy (±22.4% error) - ❌ FAIL  
+  RTX 5090 - Cyberpunk 2077: 40.0% accuracy (±60.0% error) - ❌ FAIL
 ```
 
 ## Advanced Features ✨
@@ -235,15 +298,25 @@ Comprehensive power consumption and efficiency metrics:
 
 ## Key Features
 
+### AI/ML Performance
 - **🔬 Validated Accuracy**: Leave-One-Out Cross-Validation against real hardware
 - **🤖 Modern AI Models**: LLMs, Vision Transformers, Object Detection, Generative AI  
 - **📊 Multi-GPU Comparison**: Performance across 10+ GPU architectures
-- **🌡️ Thermal Modeling**: Real-time temperature simulation and throttling detection
 - **⚡ Batch Optimization**: Automatic batch size tuning for optimal performance
+- **🚀 Multi-Framework**: TensorFlow, PyTorch, ONNX, HuggingFace
+
+### Gaming Performance
+- **🎮 Gaming FPS Prediction**: Accurate frame rate prediction for 4+ major games
+- **🎯 Ray Tracing Analysis**: RT performance impact modeling
+- **🔄 DLSS/FSR Support**: Upscaling performance prediction
+- **🎬 Frame Generation**: DLSS 3 and Blackwell frame generation analysis
+- **🎨 Graphics Settings**: Impact analysis for texture, shadows, anti-aliasing
+
+### System Analysis
+- **🌡️ Thermal Modeling**: Real-time temperature simulation and throttling detection
 - **🔋 Power Efficiency**: Comprehensive power consumption and efficiency analysis
 - **💰 Cost Analysis**: Real-time cloud pricing from AWS, GCP, Azure
 - **⚙️ Custom Hardware**: Define any GPU with TOML configuration
-- **🚀 Multi-Framework**: TensorFlow, PyTorch, ONNX, HuggingFace
 
 ## Framework Support
 
@@ -286,8 +359,21 @@ cargo build --release --features real-models
   --gpus "v100,a100,rtx4090" \
   --batch-sizes "1,8"
 
-# Validate accuracy
+# Gaming performance analysis
+./target/release/phantom-gpu gaming \
+  --gpu rtx4090 --game cyberpunk --resolution 2560x1440 \
+  --ray-tracing --dlss quality --target-fps 60
+
+# Gaming with frame generation
+./target/release/phantom-gpu gaming \
+  --gpu rtx5090 --game fortnite --resolution 3840x2160 \
+  --frame-generation --thermal-session
+
+# Validate ML accuracy (requires real-models feature)
 ./target/release/phantom-gpu validate --verbose
+
+# Validate gaming accuracy
+./target/release/phantom-gpu validate --gaming --verbose
 ```
 
 ## Configuration
@@ -296,6 +382,7 @@ PhantomGPU uses TOML files for configuration:
 
 - **`gpu_models.toml`**: Basic GPU specifications
 - **`hardware_profiles.toml`**: Detailed performance characteristics
+- **`game_profiles.toml`**: Gaming performance data and settings
 - **`benchmark_data/`**: Real hardware validation data
 
 ## Contributing

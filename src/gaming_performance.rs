@@ -2,6 +2,7 @@ use crate::gpu_config::GpuModel;
 use crate::errors::PhantomGpuError;
 use serde::{ Deserialize, Serialize };
 use std::collections::HashMap;
+use std::fs;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GamingPerformance {
@@ -112,9 +113,65 @@ pub enum FrameGenerationQuality {
     Excellent,
 }
 
+// TOML configuration structures
+#[derive(Debug, Deserialize)]
+struct GameProfilesConfig {
+    gpu_features: HashMap<String, GamingGPUFeatures>,
+    games: HashMap<String, GameConfigEntry>,
+    upscaling: UpscalingConfig,
+    frame_generation: FrameGenerationConfig,
+    resolution_scaling: HashMap<String, f64>,
+    graphics_settings: GraphicsSettingsConfig,
+    validation: Option<HashMap<String, HashMap<String, ValidationEntry>>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GameConfigEntry {
+    description: String,
+    rt_performance_impact: f64,
+    memory_intensity: f64,
+    compute_intensity: f64,
+    texture_streaming: f64,
+    scene_complexity_variance: f64,
+    base_performance: HashMap<String, f64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct UpscalingConfig {
+    dlss: HashMap<String, f64>,
+    fsr: HashMap<String, f64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct FrameGenerationConfig {
+    compatibility: HashMap<String, f64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GraphicsSettingsConfig {
+    texture_quality: HashMap<String, f64>,
+    shadow_quality: HashMap<String, f64>,
+    anti_aliasing: HashMap<String, f64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ValidationEntry {
+    resolution: String,
+    ray_tracing: bool,
+    dlss: String,
+    expected_fps: f64,
+    tolerance: f64,
+    source: String,
+}
+
 pub struct GamingPerformanceEngine {
     gpu_features: HashMap<String, GamingGPUFeatures>,
     game_profiles: HashMap<String, GameProfile>,
+    upscaling_config: UpscalingConfig,
+    frame_generation_config: FrameGenerationConfig,
+    resolution_scaling: HashMap<String, f64>,
+    graphics_settings_config: GraphicsSettingsConfig,
+    validation_data: HashMap<String, HashMap<String, ValidationEntry>>,
 }
 
 #[derive(Debug, Clone)]
@@ -129,14 +186,72 @@ struct GameProfile {
 
 impl GamingPerformanceEngine {
     pub fn new() -> Self {
-        let mut engine = Self {
-            gpu_features: HashMap::new(),
-            game_profiles: HashMap::new(),
-        };
+        // Try to load from TOML file, fallback to hardcoded data
+        match Self::load_from_config() {
+            Ok(engine) => engine,
+            Err(_) => {
+                // Fallback to hardcoded initialization
+                let mut engine = Self {
+                    gpu_features: HashMap::new(),
+                    game_profiles: HashMap::new(),
+                    upscaling_config: UpscalingConfig {
+                        dlss: HashMap::new(),
+                        fsr: HashMap::new(),
+                    },
+                    frame_generation_config: FrameGenerationConfig {
+                        compatibility: HashMap::new(),
+                    },
+                    resolution_scaling: HashMap::new(),
+                    graphics_settings_config: GraphicsSettingsConfig {
+                        texture_quality: HashMap::new(),
+                        shadow_quality: HashMap::new(),
+                        anti_aliasing: HashMap::new(),
+                    },
+                    validation_data: HashMap::new(),
+                };
 
-        engine.initialize_gpu_features();
-        engine.initialize_game_profiles();
-        engine
+                engine.initialize_gpu_features();
+                engine.initialize_game_profiles();
+                engine.initialize_fallback_config();
+                engine
+            }
+        }
+    }
+
+    fn load_from_config() -> Result<Self, PhantomGpuError> {
+        let toml_content = fs
+            ::read_to_string("game_profiles.toml")
+            .map_err(|e| PhantomGpuError::ConfigError {
+                message: format!("Failed to read game_profiles.toml: {}", e),
+            })?;
+
+        let config: GameProfilesConfig = toml
+            ::from_str(&toml_content)
+            .map_err(|e| PhantomGpuError::ConfigError {
+                message: format!("Failed to parse game_profiles.toml: {}", e),
+            })?;
+
+        let mut game_profiles = HashMap::new();
+        for (name, entry) in config.games {
+            game_profiles.insert(name, GameProfile {
+                base_performance: entry.base_performance,
+                rt_performance_impact: entry.rt_performance_impact,
+                memory_intensity: entry.memory_intensity,
+                compute_intensity: entry.compute_intensity,
+                texture_streaming: entry.texture_streaming,
+                scene_complexity_variance: entry.scene_complexity_variance,
+            });
+        }
+
+        Ok(Self {
+            gpu_features: config.gpu_features,
+            game_profiles,
+            upscaling_config: config.upscaling,
+            frame_generation_config: config.frame_generation,
+            resolution_scaling: config.resolution_scaling,
+            graphics_settings_config: config.graphics_settings,
+            validation_data: config.validation.unwrap_or_default(),
+        })
     }
 
     fn initialize_gpu_features(&mut self) {
@@ -209,6 +324,52 @@ impl GamingPerformanceEngine {
             av1_encode: true,
             av1_decode: true,
         });
+    }
+
+    fn initialize_fallback_config(&mut self) {
+        // Initialize fallback upscaling configuration
+        self.upscaling_config.dlss.insert("quality".to_string(), 1.4);
+        self.upscaling_config.dlss.insert("balanced".to_string(), 1.7);
+        self.upscaling_config.dlss.insert("performance".to_string(), 2.3);
+        self.upscaling_config.dlss.insert("ultra_performance".to_string(), 3.0);
+
+        self.upscaling_config.fsr.insert("ultra_quality".to_string(), 1.3);
+        self.upscaling_config.fsr.insert("quality".to_string(), 1.5);
+        self.upscaling_config.fsr.insert("balanced".to_string(), 1.7);
+        self.upscaling_config.fsr.insert("performance".to_string(), 2.0);
+
+        // Initialize fallback frame generation configuration
+        self.frame_generation_config.compatibility.insert("Cyberpunk 2077".to_string(), 0.9);
+        self.frame_generation_config.compatibility.insert(
+            "Call of Duty: Modern Warfare III".to_string(),
+            0.8
+        );
+        self.frame_generation_config.compatibility.insert("Fortnite".to_string(), 0.7);
+        self.frame_generation_config.compatibility.insert("Hogwarts Legacy".to_string(), 0.85);
+
+        // Initialize fallback resolution scaling
+        self.resolution_scaling.insert("1920x1080".to_string(), 1.0);
+        self.resolution_scaling.insert("2560x1440".to_string(), 0.65);
+        self.resolution_scaling.insert("3440x1440".to_string(), 0.55);
+        self.resolution_scaling.insert("3840x2160".to_string(), 0.35);
+
+        // Initialize fallback graphics settings
+        self.graphics_settings_config.texture_quality.insert("low".to_string(), 1.05);
+        self.graphics_settings_config.texture_quality.insert("medium".to_string(), 1.0);
+        self.graphics_settings_config.texture_quality.insert("high".to_string(), 0.95);
+        self.graphics_settings_config.texture_quality.insert("ultra".to_string(), 0.9);
+
+        self.graphics_settings_config.shadow_quality.insert("low".to_string(), 1.08);
+        self.graphics_settings_config.shadow_quality.insert("medium".to_string(), 1.0);
+        self.graphics_settings_config.shadow_quality.insert("high".to_string(), 0.94);
+        self.graphics_settings_config.shadow_quality.insert("ultra".to_string(), 0.88);
+
+        self.graphics_settings_config.anti_aliasing.insert("off".to_string(), 1.0);
+        self.graphics_settings_config.anti_aliasing.insert("fxaa".to_string(), 0.98);
+        self.graphics_settings_config.anti_aliasing.insert("msaa_2x".to_string(), 0.92);
+        self.graphics_settings_config.anti_aliasing.insert("msaa_4x".to_string(), 0.85);
+        self.graphics_settings_config.anti_aliasing.insert("msaa_8x".to_string(), 0.75);
+        self.graphics_settings_config.anti_aliasing.insert("taa".to_string(), 0.96);
     }
 
     fn initialize_game_profiles(&mut self) {
@@ -372,18 +533,25 @@ impl GamingPerformanceEngine {
         base_fps: f64,
         resolution: (u32, u32)
     ) -> Result<f64, PhantomGpuError> {
-        let pixel_count = (resolution.0 as f64) * (resolution.1 as f64);
-        let baseline_pixels = 1920.0 * 1080.0; // 1080p baseline
+        let resolution_key = format!("{}x{}", resolution.0, resolution.1);
 
-        let scaling_factor = baseline_pixels / pixel_count;
+        let scaling_factor = if let Some(&factor) = self.resolution_scaling.get(&resolution_key) {
+            factor
+        } else {
+            // Fallback to calculation for unknown resolutions
+            let pixel_count = (resolution.0 as f64) * (resolution.1 as f64);
+            let baseline_pixels = 1920.0 * 1080.0; // 1080p baseline
 
-        // Apply non-linear scaling (not all workload is pixel-bound)
-        let pixel_bound_factor = 0.7; // 70% of workload is pixel-bound
-        let cpu_bound_factor = 1.0 - pixel_bound_factor;
+            let scaling_factor = baseline_pixels / pixel_count;
 
-        let effective_scaling = pixel_bound_factor * scaling_factor + cpu_bound_factor;
+            // Apply non-linear scaling (not all workload is pixel-bound)
+            let pixel_bound_factor = 0.7; // 70% of workload is pixel-bound
+            let cpu_bound_factor = 1.0 - pixel_bound_factor;
 
-        Ok(base_fps * effective_scaling)
+            pixel_bound_factor * scaling_factor + cpu_bound_factor
+        };
+
+        Ok(base_fps * scaling_factor)
     }
 
     fn apply_ray_tracing_impact(
@@ -417,10 +585,14 @@ impl GamingPerformanceEngine {
         if gpu_features.tensor_cores > 0 {
             let dlss_scaling = match dlss_mode {
                 DLSSMode::Off => 1.0,
-                DLSSMode::Quality => 1.3,
-                DLSSMode::Balanced => 1.7,
-                DLSSMode::Performance => 2.0,
-                DLSSMode::UltraPerformance => 2.5,
+                DLSSMode::Quality =>
+                    self.upscaling_config.dlss.get("quality").copied().unwrap_or(1.4),
+                DLSSMode::Balanced =>
+                    self.upscaling_config.dlss.get("balanced").copied().unwrap_or(1.7),
+                DLSSMode::Performance =>
+                    self.upscaling_config.dlss.get("performance").copied().unwrap_or(2.3),
+                DLSSMode::UltraPerformance =>
+                    self.upscaling_config.dlss.get("ultra_performance").copied().unwrap_or(3.0),
             };
 
             let dlss_efficiency = match gpu_features.tensor_generation {
@@ -437,10 +609,14 @@ impl GamingPerformanceEngine {
         if matches!(dlss_mode, DLSSMode::Off) {
             let fsr_scaling = match fsr_mode {
                 FSRMode::Off => 1.0,
-                FSRMode::UltraQuality => 1.2,
-                FSRMode::Quality => 1.4,
-                FSRMode::Balanced => 1.6,
-                FSRMode::Performance => 1.8,
+                FSRMode::UltraQuality =>
+                    self.upscaling_config.fsr.get("ultra_quality").copied().unwrap_or(1.3),
+                FSRMode::Quality =>
+                    self.upscaling_config.fsr.get("quality").copied().unwrap_or(1.5),
+                FSRMode::Balanced =>
+                    self.upscaling_config.fsr.get("balanced").copied().unwrap_or(1.7),
+                FSRMode::Performance =>
+                    self.upscaling_config.fsr.get("performance").copied().unwrap_or(2.0),
             };
 
             fps *= fsr_scaling * 0.93; // FSR has slightly lower efficiency than DLSS
@@ -459,30 +635,44 @@ impl GamingPerformanceEngine {
 
         // Texture quality impact
         let texture_impact = match settings.texture_quality {
-            Quality::Ultra => 0.9,
-            Quality::High => 0.95,
-            Quality::Medium => 0.98,
-            Quality::Low => 1.0,
+            Quality::Ultra =>
+                self.graphics_settings_config.texture_quality.get("ultra").copied().unwrap_or(0.9),
+            Quality::High =>
+                self.graphics_settings_config.texture_quality.get("high").copied().unwrap_or(0.95),
+            Quality::Medium =>
+                self.graphics_settings_config.texture_quality.get("medium").copied().unwrap_or(1.0),
+            Quality::Low =>
+                self.graphics_settings_config.texture_quality.get("low").copied().unwrap_or(1.05),
         };
         fps *= texture_impact;
 
         // Shadow quality impact
         let shadow_impact = match settings.shadow_quality {
-            Quality::Ultra => 0.85,
-            Quality::High => 0.92,
-            Quality::Medium => 0.96,
-            Quality::Low => 1.0,
+            Quality::Ultra =>
+                self.graphics_settings_config.shadow_quality.get("ultra").copied().unwrap_or(0.88),
+            Quality::High =>
+                self.graphics_settings_config.shadow_quality.get("high").copied().unwrap_or(0.94),
+            Quality::Medium =>
+                self.graphics_settings_config.shadow_quality.get("medium").copied().unwrap_or(1.0),
+            Quality::Low =>
+                self.graphics_settings_config.shadow_quality.get("low").copied().unwrap_or(1.08),
         };
         fps *= shadow_impact;
 
         // Anti-aliasing impact
         let aa_impact = match settings.anti_aliasing {
-            AntiAliasing::Off => 1.0,
-            AntiAliasing::FXAA => 0.98,
-            AntiAliasing::TAA => 0.95,
-            AntiAliasing::MSAA2x => 0.9,
-            AntiAliasing::MSAA4x => 0.8,
-            AntiAliasing::MSAA8x => 0.65,
+            AntiAliasing::Off =>
+                self.graphics_settings_config.anti_aliasing.get("off").copied().unwrap_or(1.0),
+            AntiAliasing::FXAA =>
+                self.graphics_settings_config.anti_aliasing.get("fxaa").copied().unwrap_or(0.98),
+            AntiAliasing::TAA =>
+                self.graphics_settings_config.anti_aliasing.get("taa").copied().unwrap_or(0.96),
+            AntiAliasing::MSAA2x =>
+                self.graphics_settings_config.anti_aliasing.get("msaa_2x").copied().unwrap_or(0.92),
+            AntiAliasing::MSAA4x =>
+                self.graphics_settings_config.anti_aliasing.get("msaa_4x").copied().unwrap_or(0.85),
+            AntiAliasing::MSAA8x =>
+                self.graphics_settings_config.anti_aliasing.get("msaa_8x").copied().unwrap_or(0.75),
         };
         fps *= aa_impact;
 
@@ -631,13 +821,7 @@ impl GamingPerformanceEngine {
     }
 
     fn get_frame_generation_compatibility(&self, game_name: &str) -> f64 {
-        match game_name {
-            "Cyberpunk 2077" => 0.95, // Excellent compatibility
-            "Call of Duty: Modern Warfare III" => 0.85, // Good, but fast-paced
-            "Fortnite" => 0.8, // Good, but rapid scene changes
-            "Hogwarts Legacy" => 0.9, // Good compatibility
-            _ => 0.75, // Default compatibility
-        }
+        self.frame_generation_config.compatibility.get(game_name).copied().unwrap_or(0.75) // Default compatibility
     }
 
     fn calculate_frame_generation_latency_penalty(

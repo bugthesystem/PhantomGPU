@@ -28,6 +28,7 @@ pub mod power_modeling;
 pub mod gaming_performance;
 pub mod gaming_thermal;
 pub mod gaming_power;
+pub mod gaming_accuracy_test;
 
 // Real model support
 #[cfg(feature = "real-models")]
@@ -336,13 +337,94 @@ async fn run() -> PhantomResult<()> {
         }
 
         #[cfg(feature = "real-models")]
-        Commands::Validate { gpu, benchmark_data, verbose } => {
+        Commands::Validate { gpu, benchmark_data, gaming, verbose } => {
             println!("\n{}", "🎯 Validating PhantomGPU Accuracy".cyan().bold());
+
+            // Run ML validation if real-models feature is enabled
             commands::handle_validate_command(
                 gpu.as_deref(),
                 benchmark_data.as_deref(),
                 verbose
             ).await?;
+
+            // Run gaming validation if requested
+            if gaming {
+                println!("\n{}", "🎮 Gaming Accuracy Validation".cyan().bold());
+                match gaming_accuracy_test::run_gaming_accuracy_test() {
+                    Ok(report) => {
+                        println!("\n{}", "🎯 Gaming Accuracy Test Results".bold());
+                        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                        println!("📊 Overall Accuracy: {:.1}%", report.overall_accuracy);
+                        println!("✅ Passed: {}/{} tests", report.passed_tests, report.total_tests);
+
+                        if verbose {
+                            println!("\n📋 Detailed Results:");
+                            for result in &report.results {
+                                println!(
+                                    "  {} - {}: {:.1}% accuracy (±{:.1}% error) - {} [{}]",
+                                    result.gpu_name,
+                                    result.game_name,
+                                    result.accuracy_percentage,
+                                    result.error_percentage,
+                                    if result.within_tolerance {
+                                        "✅ PASS"
+                                    } else {
+                                        "❌ FAIL"
+                                    },
+                                    result.source
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Gaming accuracy test failed: {:?}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
+        }
+
+        #[cfg(not(feature = "real-models"))]
+        Commands::Validate { gaming, verbose } => {
+            println!("\n{}", "🎯 Validating PhantomGPU Accuracy".cyan().bold());
+
+            // Only gaming validation available without real-models feature
+            if gaming {
+                println!("\n{}", "🎮 Gaming Accuracy Validation".cyan().bold());
+                match gaming_accuracy_test::run_gaming_accuracy_test() {
+                    Ok(report) => {
+                        println!("\n{}", "🎯 Gaming Accuracy Test Results".bold());
+                        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                        println!("📊 Overall Accuracy: {:.1}%", report.overall_accuracy);
+                        println!("✅ Passed: {}/{} tests", report.passed_tests, report.total_tests);
+
+                        if verbose {
+                            println!("\n📋 Detailed Results:");
+                            for result in &report.results {
+                                println!(
+                                    "  {} - {}: {:.1}% accuracy (±{:.1}% error) - {} [{}]",
+                                    result.gpu_name,
+                                    result.game_name,
+                                    result.accuracy_percentage,
+                                    result.error_percentage,
+                                    if result.within_tolerance {
+                                        "✅ PASS"
+                                    } else {
+                                        "❌ FAIL"
+                                    },
+                                    result.source
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Gaming accuracy test failed: {:?}", e);
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                println!("ℹ️  Gaming validation disabled. Use --gaming flag to enable.");
+            }
         }
 
         #[cfg(feature = "real-models")]

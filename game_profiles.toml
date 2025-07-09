@@ -1,0 +1,211 @@
+# PhantomGPU Game Profiles Configuration
+# Performance data for gaming workloads across different GPUs and games
+
+[metadata]
+version = "1.0.0"
+description = "Gaming performance profiles for PhantomGPU"
+last_updated = "2025-01-25"
+
+# GPU Feature Specifications
+# Used for ray tracing, DLSS/FSR, and frame generation analysis
+[gpu_features]
+
+[gpu_features."RTX 4090"]
+rops = 176
+tmus = 512
+rt_cores = 128
+rt_generation = 3
+tensor_cores = 512
+tensor_generation = 4
+vrs_support = true
+mesh_shader_support = true
+av1_encode = true
+av1_decode = true
+
+[gpu_features."RTX 5090"]
+rops = 192
+tmus = 608
+rt_cores = 170
+rt_generation = 4
+tensor_cores = 680
+tensor_generation = 5
+vrs_support = true
+mesh_shader_support = true
+av1_encode = true
+av1_decode = true
+
+[gpu_features."RTX 4080"]
+rops = 112
+tmus = 304
+rt_cores = 76
+rt_generation = 3
+tensor_cores = 304
+tensor_generation = 4
+vrs_support = true
+mesh_shader_support = true
+av1_encode = true
+av1_decode = true
+
+[gpu_features."RTX 5080"]
+rops = 128
+tmus = 384
+rt_cores = 96
+rt_generation = 4
+tensor_cores = 384
+tensor_generation = 5
+vrs_support = true
+mesh_shader_support = true
+av1_encode = true
+av1_decode = true
+
+[gpu_features."RX 7900 XTX"]
+rops = 192
+tmus = 384
+rt_cores = 96  # Ray accelerators
+rt_generation = 2
+tensor_cores = 0  # Uses Matrix units instead
+tensor_generation = 0
+vrs_support = true
+mesh_shader_support = true
+av1_encode = true
+av1_decode = true
+
+# Game Performance Profiles
+# Base performance at 1080p with detailed characteristics
+
+[games."Cyberpunk 2077"]
+description = "Very demanding, excellent RT showcase"
+rt_performance_impact = 0.5  # 50% performance hit with RT
+memory_intensity = 0.8
+compute_intensity = 0.9
+texture_streaming = 0.9
+scene_complexity_variance = 0.3
+
+[games."Cyberpunk 2077".base_performance]
+"RTX 4090" = 120.0
+"RTX 5090" = 160.0
+"RTX 4080" = 95.0
+"RTX 5080" = 130.0
+"RX 7900 XTX" = 110.0
+
+[games."Call of Duty: Modern Warfare III"]
+description = "Competitive FPS with optimized engine"
+rt_performance_impact = 0.75  # Less RT impact than Cyberpunk
+memory_intensity = 0.6
+compute_intensity = 0.7
+texture_streaming = 0.7
+scene_complexity_variance = 0.2
+
+[games."Call of Duty: Modern Warfare III".base_performance]
+"RTX 4090" = 180.0
+"RTX 5090" = 240.0
+"RTX 4080" = 150.0
+"RTX 5080" = 200.0
+"RX 7900 XTX" = 170.0
+
+[games."Fortnite"]
+description = "Battle Royale with good optimization"
+rt_performance_impact = 0.8
+memory_intensity = 0.5
+compute_intensity = 0.6
+texture_streaming = 0.6
+scene_complexity_variance = 0.4  # High variance due to building/destruction
+
+[games."Fortnite".base_performance]
+"RTX 4090" = 200.0
+"RTX 5090" = 260.0
+"RTX 4080" = 170.0
+"RTX 5080" = 220.0
+"RX 7900 XTX" = 190.0
+
+[games."Hogwarts Legacy"]
+description = "Open world with demanding graphics"
+rt_performance_impact = 0.6
+memory_intensity = 0.9
+compute_intensity = 0.8
+texture_streaming = 0.9
+scene_complexity_variance = 0.3
+
+[games."Hogwarts Legacy".base_performance]
+"RTX 4090" = 90.0
+"RTX 5090" = 130.0
+"RTX 4080" = 70.0
+"RTX 5080" = 100.0
+"RX 7900 XTX" = 85.0
+
+# DLSS/FSR Performance Scaling Factors
+[upscaling.dlss]
+quality = 1.4        # 1.4x performance boost
+balanced = 1.7       # 1.7x performance boost  
+performance = 2.3    # 2.3x performance boost
+ultra_performance = 3.0  # 3.0x performance boost
+
+[upscaling.fsr]
+ultra_quality = 1.3  # 1.3x performance boost
+quality = 1.5        # 1.5x performance boost
+balanced = 1.7       # 1.7x performance boost
+performance = 2.0    # 2.0x performance boost
+
+# Frame Generation Compatibility
+# How well each game works with DLSS 3 frame generation
+[frame_generation.compatibility]
+"Cyberpunk 2077" = 0.9     # Excellent support
+"Call of Duty: Modern Warfare III" = 0.8  # Good support
+"Fortnite" = 0.7           # Fair support (competitive concerns)
+"Hogwarts Legacy" = 0.85   # Good support
+
+# Resolution Scaling Factors
+# Performance impact of higher resolutions (relative to 1080p)
+[resolution_scaling]
+"1920x1080" = 1.0    # Baseline
+"2560x1440" = 0.65   # ~65% of 1080p performance
+"3440x1440" = 0.55   # ~55% of 1080p performance (ultrawide)
+"3840x2160" = 0.35   # ~35% of 1080p performance (4K)
+
+# Graphics Settings Impact
+# Performance multipliers for different quality settings
+[graphics_settings.texture_quality]
+low = 1.05
+medium = 1.0
+high = 0.95
+ultra = 0.9
+
+[graphics_settings.shadow_quality]
+low = 1.08
+medium = 1.0
+high = 0.94
+ultra = 0.88
+
+[graphics_settings.anti_aliasing]
+off = 1.0
+fxaa = 0.98
+msaa_2x = 0.92
+msaa_4x = 0.85
+msaa_8x = 0.75
+taa = 0.96
+
+# Example validation data for accuracy testing
+# This will be used to validate gaming predictions against real hardware
+[validation."RTX 4090"."Cyberpunk 2077"]
+resolution = "2560x1440"
+ray_tracing = true
+dlss = "quality"
+expected_fps = 85.0
+tolerance = 0.15  # ±15% acceptable error
+source = "TechPowerUp, January 2025"
+
+[validation."RTX 4090"."Fortnite"]
+resolution = "1920x1080"
+ray_tracing = false
+dlss = "off"
+expected_fps = 195.0
+tolerance = 0.10  # ±10% acceptable error
+source = "Competitive Gaming Benchmarks"
+
+[validation."RTX 5090"."Cyberpunk 2077"]
+resolution = "3840x2160"
+ray_tracing = true
+dlss = "quality"
+expected_fps = 75.0
+tolerance = 0.12  # ±12% acceptable error
+source = "NVIDIA Internal Benchmarks" 

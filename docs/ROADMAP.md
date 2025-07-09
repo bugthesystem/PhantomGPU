@@ -10,6 +10,10 @@
 - Cost analysis and GPU recommendations
 - CLI interface with comprehensive features
 - **30+ modern AI models including LLMs, Vision Transformers, and Object Detection**
+- **🎮 Gaming Performance Prediction System** ✨
+- **Ray tracing and DLSS/FSR modeling**
+- **Frame generation analysis (DLSS 3, Blackwell)**
+- **Gaming thermal and power profiles**
 
 **Framework Support:**
 - ✅ TensorFlow (SavedModel, frozen graphs, TensorFlow Lite, Keras)
@@ -33,6 +37,7 @@
 - ✅ **Object Detection**: YOLOv8/v9/v10, DETR, RT-DETR variants
 - ✅ **Generative Models**: Stable Diffusion, Stable Diffusion XL
 - ✅ **Traditional CNNs**: ResNet-50, BERT-Base
+- ✅ **Gaming Workloads**: Cyberpunk 2077, Fortnite, Call of Duty, Hogwarts Legacy
 
 **Accuracy & Validation System:**
 - ✅ **Leave-One-Out Cross-Validation for small datasets**
@@ -59,6 +64,17 @@
 - Advanced Vision Transformers (CLIP, DINO, MAE)
 - Multimodal models (DALL-E, CLIP variants)
 - Real-time inference optimization models
+
+### Gaming Feature Enhancement 🎮
+**Goal**: Comprehensive gaming performance modeling
+- ✅ **Complete gaming CLI integration with 15+ parameters**
+- ✅ **Game name mapping system (cyberpunk → Cyberpunk 2077)**
+- ✅ **Frame generation modeling for DLSS 3 and Blackwell**
+- 🔄 **External game_profiles.toml configuration**
+- 🔄 **Gaming accuracy validation system**
+- ⏳ **Additional game profiles** (Apex Legends, Valorant, Overwatch)
+- ⏳ **Competitive gaming optimization recommendations**
+- ⏳ **VR gaming performance prediction**
 
 ### Web Interface 🌐
 **Goal**: Browser-based GPU emulation
@@ -137,10 +153,19 @@
 - ✅ **Modern object detection**: YOLO v8/v9/v10, DETR families
 - ✅ **Generative AI**: Stable Diffusion XL support
 
+**Gaming Performance System (January 2025):**
+- ✅ **Gaming performance prediction engine with 4 major games**
+- ✅ **Ray tracing impact modeling with GPU-specific RT cores**
+- ✅ **DLSS/FSR upscaling performance prediction**
+- ✅ **Frame generation analysis for DLSS 3 and Blackwell**
+- ✅ **Gaming thermal profiles with scene complexity variance**
+- ✅ **Power consumption modeling for gaming workloads**
+- ✅ **Complete CLI integration with 15+ gaming parameters**
+- ✅ **Game name mapping system for user convenience**
+
 ## Not Planned
 
 We explicitly avoid these to maintain focus:
-- Game/graphics workloads (ML-focused only)
 - Real GPU monitoring (prediction-focused)
 - Multiple configuration formats (TOML is sufficient)
 - Distributed system complexity (keep core simple)
