@@ -189,6 +189,69 @@ pub enum Commands {
         verbose: bool,
     },
 
+    /// Gaming performance prediction and analysis
+    Gaming {
+        /// GPU to analyze gaming performance
+        #[arg(short, long, value_enum, default_value = "rtx4090")]
+        gpu: GpuType,
+
+        /// Game to analyze
+        #[arg(long, default_value = "Cyberpunk 2077")]
+        game: String,
+
+        /// Resolution (e.g., 1920x1080, 2560x1440, 3840x2160)
+        #[arg(long, default_value = "2560x1440")]
+        resolution: String,
+
+        /// Enable ray tracing
+        #[arg(long)]
+        ray_tracing: bool,
+
+        /// DLSS mode (off, quality, balanced, performance, ultra-performance)
+        #[arg(long, default_value = "off")]
+        dlss: String,
+
+        /// FSR mode (off, ultra-quality, quality, balanced, performance)
+        #[arg(long, default_value = "off")]
+        fsr: String,
+
+        /// Target FPS
+        #[arg(long, default_value = "60")]
+        target_fps: f64,
+
+        /// Scene complexity (0.0-1.0)
+        #[arg(long, default_value = "0.7")]
+        scene_complexity: f64,
+
+        /// Graphics quality preset (low, medium, high, ultra)
+        #[arg(long, default_value = "high")]
+        graphics_quality: String,
+
+        /// Ambient temperature in Celsius
+        #[arg(long, default_value = "25")]
+        ambient_temp: f64,
+
+        /// Enable frame generation prediction
+        #[arg(long)]
+        frame_generation: bool,
+
+        /// Show power consumption analysis
+        #[arg(long)]
+        power_analysis: bool,
+
+        /// Simulate thermal behavior during gaming session
+        #[arg(long)]
+        thermal_session: bool,
+
+        /// Gaming session duration in minutes
+        #[arg(long, default_value = "60")]
+        session_duration: f64,
+
+        /// Show detailed gaming analysis
+        #[arg(long)]
+        verbose: bool,
+    },
+
     #[cfg(feature = "real-models")]
     /// List detailed hardware profiles for realistic performance modeling
     ListHardware {

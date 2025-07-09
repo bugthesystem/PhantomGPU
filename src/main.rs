@@ -25,6 +25,9 @@ pub mod cloud_cost_estimator;
 pub mod thermal_modeling;
 pub mod batch_optimizer;
 pub mod power_modeling;
+pub mod gaming_performance;
+pub mod gaming_thermal;
+pub mod gaming_power;
 
 // Real model support
 #[cfg(feature = "real-models")]
@@ -210,6 +213,51 @@ async fn run() -> PhantomResult<()> {
                 energy_cost,
                 include_thermal,
                 compare,
+                verbose
+            ).await?;
+        }
+
+        Commands::Gaming {
+            gpu,
+            game,
+            resolution,
+            ray_tracing,
+            dlss,
+            fsr,
+            target_fps,
+            scene_complexity,
+            graphics_quality,
+            ambient_temp,
+            frame_generation,
+            power_analysis,
+            thermal_session,
+            session_duration,
+            verbose,
+        } => {
+            let gpu_model = gpu.to_gpu_model();
+            println!(
+                "\n{}",
+                format!(
+                    "🎮 Gaming Performance: {} on {}",
+                    game.cyan(),
+                    gpu_model.name.yellow()
+                ).bold()
+            );
+            commands::handle_gaming_command(
+                &gpu_model,
+                &game,
+                &resolution,
+                ray_tracing,
+                &dlss,
+                &fsr,
+                target_fps,
+                scene_complexity,
+                &graphics_quality,
+                ambient_temp,
+                frame_generation,
+                power_analysis,
+                thermal_session,
+                session_duration,
                 verbose
             ).await?;
         }

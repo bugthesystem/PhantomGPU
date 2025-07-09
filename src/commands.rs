@@ -1718,7 +1718,391 @@ pub async fn handle_optimize_command(
     Ok(())
 }
 
+/// Map common game abbreviations to full names
+fn map_game_name(game: &str) -> String {
+    match game.to_lowercase().as_str() {
+        "cyberpunk" | "cyberpunk2077" | "cp2077" => "Cyberpunk 2077".to_string(),
+        "cod" | "mw3" | "modern-warfare" | "call-of-duty" =>
+            "Call of Duty: Modern Warfare III".to_string(),
+        "fortnite" | "fn" => "Fortnite".to_string(),
+        "hogwarts" | "hogwarts-legacy" | "hl" => "Hogwarts Legacy".to_string(),
+        _ => game.to_string(), // Return original if no match found
+    }
+}
+
 /// Handle power analysis command
+pub async fn handle_gaming_command(
+    gpu_config: &GpuModel,
+    game: &str,
+    resolution: &str,
+    ray_tracing: bool,
+    dlss: &str,
+    fsr: &str,
+    target_fps: f64,
+    scene_complexity: f64,
+    graphics_quality: &str,
+    ambient_temp: f64,
+    frame_generation: bool,
+    power_analysis: bool,
+    thermal_session: bool,
+    session_duration: f64,
+    verbose: bool
+) -> PhantomResult<()> {
+    use crate::gaming_performance::{
+        GamingPerformanceEngine,
+        GamingWorkload,
+        DLSSMode,
+        FSRMode,
+        Quality,
+        AntiAliasing,
+        GraphicsSettings,
+    };
+    use crate::gaming_thermal::GamingThermalEngine;
+    use crate::gaming_power::GamingPowerEngine;
+
+    println!("🎮 {}", "Gaming Performance Analysis".bold().cyan());
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    // Parse resolution
+    let resolution_parts: Vec<&str> = resolution.split('x').collect();
+    if resolution_parts.len() != 2 {
+        return Err(crate::errors::PhantomGpuError::ConfigError {
+            message: "Invalid resolution format. Use format like '1920x1080'".to_string(),
+        });
+    }
+    let res_width = resolution_parts[0]
+        .parse::<u32>()
+        .map_err(|_| crate::errors::PhantomGpuError::ConfigError {
+            message: "Invalid resolution width".to_string(),
+        })?;
+    let res_height = resolution_parts[1]
+        .parse::<u32>()
+        .map_err(|_| crate::errors::PhantomGpuError::ConfigError {
+            message: "Invalid resolution height".to_string(),
+        })?;
+
+    // Parse DLSS mode
+    let dlss_mode = match dlss.to_lowercase().as_str() {
+        "off" => DLSSMode::Off,
+        "quality" => DLSSMode::Quality,
+        "balanced" => DLSSMode::Balanced,
+        "performance" => DLSSMode::Performance,
+        "ultra-performance" => DLSSMode::UltraPerformance,
+        _ => DLSSMode::Off,
+    };
+
+    // Parse FSR mode
+    let fsr_mode = match fsr.to_lowercase().as_str() {
+        "off" => FSRMode::Off,
+        "ultra-quality" => FSRMode::UltraQuality,
+        "quality" => FSRMode::Quality,
+        "balanced" => FSRMode::Balanced,
+        "performance" => FSRMode::Performance,
+        _ => FSRMode::Off,
+    };
+
+    // Parse graphics quality
+    let quality_level = match graphics_quality.to_lowercase().as_str() {
+        "low" => Quality::Low,
+        "medium" => Quality::Medium,
+        "high" => Quality::High,
+        "ultra" => Quality::Ultra,
+        _ => Quality::High,
+    };
+
+    // Create graphics settings based on quality preset
+    let graphics_settings = match quality_level {
+        Quality::Ultra =>
+            GraphicsSettings {
+                texture_quality: Quality::Ultra,
+                shadow_quality: Quality::Ultra,
+                anti_aliasing: AntiAliasing::TAA,
+                anisotropic_filtering: 16,
+                variable_rate_shading: false,
+                mesh_shaders: true,
+            },
+        Quality::High =>
+            GraphicsSettings {
+                texture_quality: Quality::High,
+                shadow_quality: Quality::High,
+                anti_aliasing: AntiAliasing::TAA,
+                anisotropic_filtering: 16,
+                variable_rate_shading: true,
+                mesh_shaders: true,
+            },
+        Quality::Medium =>
+            GraphicsSettings {
+                texture_quality: Quality::Medium,
+                shadow_quality: Quality::Medium,
+                anti_aliasing: AntiAliasing::FXAA,
+                anisotropic_filtering: 8,
+                variable_rate_shading: true,
+                mesh_shaders: false,
+            },
+        Quality::Low =>
+            GraphicsSettings {
+                texture_quality: Quality::Low,
+                shadow_quality: Quality::Low,
+                anti_aliasing: AntiAliasing::Off,
+                anisotropic_filtering: 4,
+                variable_rate_shading: true,
+                mesh_shaders: false,
+            },
+    };
+
+    // Map common game abbreviations to full names
+    let full_game_name = map_game_name(game);
+
+    // Create gaming workload
+    let workload = GamingWorkload {
+        game_name: full_game_name,
+        resolution: (res_width, res_height),
+        ray_tracing,
+        dlss_mode,
+        fsr_mode,
+        target_fps,
+        scene_complexity,
+        graphics_settings,
+    };
+
+    // Initialize gaming engines
+    let gaming_engine = GamingPerformanceEngine::new();
+    let thermal_engine = GamingThermalEngine::new();
+    let power_engine = GamingPowerEngine::default();
+
+    // Main performance prediction
+    println!("\n🚀 {}", "Performance Prediction".yellow().bold());
+    let performance = gaming_engine.predict_gaming_performance(
+        gpu_config,
+        &workload,
+        ambient_temp
+    )?;
+
+    println!("📊 {}", "Performance Results".cyan());
+    println!("  Average FPS: {:.1}", performance.avg_fps.to_string().green().bold());
+    println!("  1% Low FPS: {:.1}", performance.one_percent_low.to_string().yellow());
+    println!("  Frame Time: {:.1}ms", performance.frame_time_ms.to_string().blue());
+    println!("  Frame Consistency: {:?}", performance.frame_time_consistency);
+    println!("  GPU Utilization: {:.1}%", (performance.gpu_utilization * 100.0).to_string().cyan());
+    println!(
+        "  Memory Utilization: {:.1}%",
+        (performance.memory_utilization * 100.0).to_string().cyan()
+    );
+    println!("  Temperature: {:.1}°C", performance.temperature.to_string().red());
+
+    // Frame generation analysis
+    if frame_generation {
+        println!("\n🎬 {}", "Frame Generation Analysis".magenta().bold());
+        if let Some(gpu_features) = gaming_engine.get_gpu_features(&gpu_config.name) {
+            let frame_gen_result = gaming_engine.predict_frame_generation_advanced(
+                &workload,
+                gpu_features,
+                performance.avg_fps
+            )?;
+
+            if frame_gen_result.supported {
+                println!("  Frame Generation: {}", "✅ Supported".green());
+                println!(
+                    "  Generated FPS: {:.1}",
+                    frame_gen_result.generated_fps.to_string().green().bold()
+                );
+                println!(
+                    "  Generation Ratio: {:.1}x",
+                    frame_gen_result.frame_generation_ratio.to_string().yellow()
+                );
+                println!(
+                    "  Latency Penalty: {:.1}ms",
+                    frame_gen_result.latency_penalty_ms.to_string().red()
+                );
+                println!("  Quality Impact: {:?}", frame_gen_result.quality_impact);
+            } else {
+                println!("  Frame Generation: {}", "❌ Not Supported".red());
+            }
+        }
+    }
+
+    // Power analysis
+    if power_analysis {
+        println!("\n🔋 {}", "Power Consumption Analysis".yellow().bold());
+        let power_consumption = power_engine.calculate_gaming_power_consumption(
+            gpu_config,
+            &workload,
+            target_fps,
+            performance.avg_fps
+        )?;
+
+        println!("📊 {}", "Power Breakdown".cyan());
+        println!(
+            "  Total Power: {:.1}W",
+            power_consumption.total_power_watts.to_string().red().bold()
+        );
+        println!("  Base Power: {:.1}W", power_consumption.base_power_watts.to_string().blue());
+        println!(
+            "  Rendering Power: {:.1}W",
+            power_consumption.rendering_power_watts.to_string().yellow()
+        );
+        println!(
+            "  Memory Power: {:.1}W",
+            power_consumption.memory_power_watts.to_string().green()
+        );
+        println!("  I/O Power: {:.1}W", power_consumption.io_power_watts.to_string().cyan());
+        println!(
+            "  Cooling Power: {:.1}W",
+            power_consumption.cooling_power_watts.to_string().magenta()
+        );
+        println!(
+            "  Efficiency: {:.1}%",
+            power_consumption.efficiency_percentage.to_string().green()
+        );
+        println!(
+            "  Power per FPS: {:.2}W/fps",
+            power_consumption.power_per_fps.to_string().yellow()
+        );
+        println!(
+            "  Performance per Watt: {:.2}fps/W",
+            power_consumption.performance_per_watt.to_string().green().bold()
+        );
+
+        if let Some(battery_life) = power_consumption.estimated_battery_life_hours {
+            println!("  Est. Battery Life: {:.1}h", battery_life.to_string().blue());
+        }
+
+        // Power scenarios
+        let scenarios = power_engine.analyze_power_scenarios(gpu_config, &workload)?;
+        println!("\n📈 {}", "Power Scenario Comparison".cyan().bold());
+        for scenario in scenarios {
+            println!(
+                "  {} - {:.1}W (${:.3}/hr, {:.3}kg CO₂/hr)",
+                scenario.scenario_name.yellow(),
+                scenario.power_consumption.total_power_watts,
+                scenario.cost_per_hour,
+                scenario.carbon_footprint_kg
+            );
+        }
+    }
+
+    // Thermal session simulation
+    if thermal_session {
+        println!("\n🔥 {}", "Gaming Thermal Session".red().bold());
+        let thermal_state = thermal_engine.simulate_gaming_thermal_session(
+            gpu_config,
+            &workload,
+            session_duration,
+            ambient_temp
+        )?;
+
+        println!("📊 {}", "Thermal Results".cyan());
+        println!(
+            "  Final Temperature: {:.1}°C",
+            thermal_state.current_temperature.to_string().red().bold()
+        );
+        println!(
+            "  Thermal Load: {:.1}%",
+            (thermal_state.thermal_load * 100.0).to_string().yellow()
+        );
+        println!("  Fan Speed: {:.1}%", thermal_state.fan_speed_percentage.to_string().blue());
+        println!("  Thermal Throttling: {}", if thermal_state.thermal_throttling {
+            "⚠️  Yes".yellow()
+        } else {
+            "✅ No".green()
+        });
+        println!(
+            "  Performance Scaling: {:.1}%",
+            (thermal_state.performance_scaling * 100.0).to_string().cyan()
+        );
+
+        if verbose && !thermal_state.thermal_history.is_empty() {
+            println!("\n📈 {}", "Thermal History".blue().bold());
+            for data_point in thermal_state.thermal_history.iter().take(10) {
+                println!(
+                    "  {:.0}s: {:.1}°C, {:.1}W, {:.1}% fan",
+                    data_point.timestamp,
+                    data_point.temperature,
+                    data_point.power_draw,
+                    data_point.fan_speed
+                );
+            }
+            if thermal_state.thermal_history.len() > 10 {
+                println!("  ... ({} more data points)", thermal_state.thermal_history.len() - 10);
+            }
+        }
+
+        // Gaming vs Compute thermal comparison
+        if verbose {
+            println!("\n⚖️  {}", "Gaming vs Compute Thermal Comparison".magenta().bold());
+            let comparison = thermal_engine.compare_gaming_vs_compute_thermal(
+                gpu_config,
+                session_duration,
+                ambient_temp
+            )?;
+
+            println!(
+                "  Gaming Temperature: {:.1}°C",
+                comparison.gaming_thermal.current_temperature.to_string().blue()
+            );
+            println!(
+                "  Compute Temperature: {:.1}°C",
+                comparison.compute_thermal.current_temperature.to_string().red()
+            );
+            println!(
+                "  Temperature Difference: {:.1}°C",
+                comparison.temperature_difference.to_string().yellow()
+            );
+            println!(
+                "  Power Difference: {:.1}%",
+                (comparison.power_difference * 100.0).to_string().cyan()
+            );
+        }
+    }
+
+    // Verbose details
+    if verbose {
+        println!("\n🔍 {}", "Detailed Analysis".blue().bold());
+        println!("📋 {}", "Workload Configuration".cyan());
+        println!("  Game: {}", workload.game_name.yellow());
+        println!("  Resolution: {}x{}", workload.resolution.0, workload.resolution.1);
+        println!("  Ray Tracing: {}", if workload.ray_tracing {
+            "✅ Enabled".green()
+        } else {
+            "❌ Disabled".red()
+        });
+        println!("  DLSS: {:?}", workload.dlss_mode);
+        println!("  FSR: {:?}", workload.fsr_mode);
+        println!("  Target FPS: {:.0}", workload.target_fps);
+        println!("  Scene Complexity: {:.1}%", workload.scene_complexity * 100.0);
+
+        println!("\n🎨 {}", "Graphics Settings".cyan());
+        println!("  Texture Quality: {:?}", workload.graphics_settings.texture_quality);
+        println!("  Shadow Quality: {:?}", workload.graphics_settings.shadow_quality);
+        println!("  Anti-Aliasing: {:?}", workload.graphics_settings.anti_aliasing);
+        println!("  Anisotropic Filtering: {}x", workload.graphics_settings.anisotropic_filtering);
+        println!("  Variable Rate Shading: {}", if workload.graphics_settings.variable_rate_shading {
+            "✅"
+        } else {
+            "❌"
+        });
+        println!("  Mesh Shaders: {}", if workload.graphics_settings.mesh_shaders {
+            "✅"
+        } else {
+            "❌"
+        });
+
+        // Supported games and GPUs
+        println!("\n📚 {}", "Available Options".green().bold());
+        println!("🎮 Supported Games:");
+        for game in gaming_engine.get_supported_games() {
+            println!("  • {}", game);
+        }
+        println!("💻 Supported GPUs:");
+        for gpu in gaming_engine.get_supported_gpus() {
+            println!("  • {}", gpu);
+        }
+    }
+
+    println!("\n✅ {}", "Gaming analysis completed successfully!".green().bold());
+    Ok(())
+}
+
 pub async fn handle_power_command(
     gpu_model: &GpuModel,
     workload_type: &str,
@@ -1730,6 +2114,17 @@ pub async fn handle_power_command(
     verbose: bool
 ) -> PhantomResult<()> {
     use crate::power_modeling::PowerModelingEngine;
+    use crate::gaming_performance::{
+        GamingPerformanceEngine,
+        GamingWorkload,
+        DLSSMode,
+        FSRMode,
+        Quality,
+        AntiAliasing,
+        GraphicsSettings,
+    };
+    use crate::gaming_thermal::GamingThermalEngine;
+    use crate::gaming_power::GamingPowerEngine;
     use crate::thermal_modeling::ThermalModelingEngine;
 
     // Input validation
