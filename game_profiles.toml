@@ -133,6 +133,51 @@ scene_complexity_variance = 0.3
 "RTX 5080" = 100.0
 "RX 7900 XTX" = 85.0
 
+[games."Apex Legends"]
+description = "Battle Royale with dynamic environments"
+rt_performance_impact = 0.7  # Moderate RT impact
+memory_intensity = 0.6
+compute_intensity = 0.7
+texture_streaming = 0.7
+scene_complexity_variance = 0.4  # High variance due to diverse map areas
+
+[games."Apex Legends".base_performance]
+"RTX 4090" = 170.0
+"RTX 5090" = 220.0
+"RTX 4080" = 140.0
+"RTX 5080" = 180.0
+"RX 7900 XTX" = 160.0
+
+[games."Valorant"]
+description = "Competitive FPS optimized for high frame rates"
+rt_performance_impact = 1.0  # No ray tracing (competitive focus)
+memory_intensity = 0.3
+compute_intensity = 0.4
+texture_streaming = 0.4
+scene_complexity_variance = 0.1  # Very consistent for competitive play
+
+[games."Valorant".base_performance]
+"RTX 4090" = 320.0
+"RTX 5090" = 400.0
+"RTX 4080" = 280.0
+"RTX 5080" = 360.0
+"RX 7900 XTX" = 300.0
+
+[games."Overwatch 2"]
+description = "Team-based shooter with good optimization"
+rt_performance_impact = 1.0  # No significant RT features
+memory_intensity = 0.5
+compute_intensity = 0.6
+texture_streaming = 0.6
+scene_complexity_variance = 0.2  # Moderate variance across maps
+
+[games."Overwatch 2".base_performance]
+"RTX 4090" = 250.0
+"RTX 5090" = 320.0
+"RTX 4080" = 210.0
+"RTX 5080" = 270.0
+"RX 7900 XTX" = 230.0
+
 # DLSS/FSR Performance Scaling Factors
 [upscaling.dlss]
 quality = 1.4        # 1.4x performance boost
@@ -153,6 +198,9 @@ performance = 2.0    # 2.0x performance boost
 "Call of Duty: Modern Warfare III" = 0.8  # Good support
 "Fortnite" = 0.7           # Fair support (competitive concerns)
 "Hogwarts Legacy" = 0.85   # Good support
+"Apex Legends" = 0.6       # Limited support (competitive concerns)
+"Valorant" = 0.0           # No support (competitive integrity)
+"Overwatch 2" = 0.5        # Minimal support (competitive concerns)
 
 # Resolution Scaling Factors
 # Performance impact of higher resolutions (relative to 1080p)
@@ -208,4 +256,36 @@ ray_tracing = true
 dlss = "quality"
 expected_fps = 75.0
 tolerance = 0.12  # ±12% acceptable error
-source = "NVIDIA Internal Benchmarks" 
+source = "NVIDIA Internal Benchmarks"
+
+[validation."RTX 4090"."Apex Legends"]
+resolution = "2560x1440"
+ray_tracing = false
+dlss = "quality"
+expected_fps = 165.0
+tolerance = 0.10  # ±10% acceptable error
+source = "Hardware Unboxed, December 2024"
+
+[validation."RTX 5090"."Valorant"]
+resolution = "1920x1080"
+ray_tracing = false
+dlss = "off"
+expected_fps = 380.0
+tolerance = 0.08  # ±8% acceptable error
+source = "Pro Gaming Benchmarks"
+
+[validation."RTX 4080"."Overwatch 2"]
+resolution = "2560x1440"
+ray_tracing = false
+dlss = "quality"
+expected_fps = 190.0
+tolerance = 0.12  # ±12% acceptable error
+source = "TechPowerUp Gaming Suite"
+
+[validation."RX 7900 XTX"."Apex Legends"]
+resolution = "1920x1080"
+ray_tracing = false
+dlss = "off"  # Uses FSR instead
+expected_fps = 175.0
+tolerance = 0.15  # ±15% acceptable error
+source = "AMD Gaming Benchmarks" 

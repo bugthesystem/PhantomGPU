@@ -25,10 +25,8 @@ pub mod cloud_cost_estimator;
 pub mod thermal_modeling;
 pub mod batch_optimizer;
 pub mod power_modeling;
-pub mod gaming_performance;
-pub mod gaming_thermal;
-pub mod gaming_power;
 pub mod gaming_accuracy_test;
+pub mod unified_gaming_emulator;
 
 // Real model support
 #[cfg(feature = "real-models")]
@@ -350,12 +348,12 @@ async fn run() -> PhantomResult<()> {
             // Run gaming validation if requested
             if gaming {
                 println!("\n{}", "🎮 Gaming Accuracy Validation".cyan().bold());
-                match gaming_accuracy_test::run_gaming_accuracy_test() {
+                match gaming_accuracy_test::run_gaming_accuracy_test().await {
                     Ok(report) => {
                         println!("\n{}", "🎯 Gaming Accuracy Test Results".bold());
                         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                         println!("📊 Overall Accuracy: {:.1}%", report.overall_accuracy);
-                        println!("✅ Passed: {}/{} tests", report.passed_tests, report.total_tests);
+                        println!("✅ Passed: {}/{} tests", report.tests_passed, report.total_tests);
 
                         if verbose {
                             println!("\n📋 Detailed Results:");
@@ -391,12 +389,12 @@ async fn run() -> PhantomResult<()> {
             // Only gaming validation available without real-models feature
             if gaming {
                 println!("\n{}", "🎮 Gaming Accuracy Validation".cyan().bold());
-                match gaming_accuracy_test::run_gaming_accuracy_test() {
+                match gaming_accuracy_test::run_gaming_accuracy_test().await {
                     Ok(report) => {
                         println!("\n{}", "🎯 Gaming Accuracy Test Results".bold());
                         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                         println!("📊 Overall Accuracy: {:.1}%", report.overall_accuracy);
-                        println!("✅ Passed: {}/{} tests", report.passed_tests, report.total_tests);
+                        println!("✅ Passed: {}/{} tests", report.tests_passed, report.total_tests);
 
                         if verbose {
                             println!("\n📋 Detailed Results:");

@@ -1,6 +1,9 @@
 //! Model configurations and emulation profiles
 
 use crate::bottleneck_analysis::{ BottleneckAnalyzer, BottleneckType };
+use serde::{ Deserialize, Serialize };
+use std::collections::HashMap;
+use crate::gpu_config::GpuModel;
 
 #[derive(Debug, Clone)]
 pub struct ModelConfig {
@@ -208,5 +211,261 @@ impl EmulationProfile {
             bottleneck_type: Some("Compute-bound (simplified)".to_string()),
             performance_analysis: Some("Using simplified FLOPS-based calculation".to_string()),
         }
+    }
+}
+
+// Add gaming workload support
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GamingWorkloadConfig {
+    pub game_name: String,
+    pub resolution: (u32, u32),
+    pub ray_tracing: bool,
+    pub dlss_mode: DLSSMode,
+    pub fsr_mode: FSRMode,
+    pub graphics_settings: GraphicsSettings,
+    pub target_fps: f64,
+    pub scene_complexity: f64, // 0.0 to 1.0
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DLSSMode {
+    Off,
+    Quality,
+    Balanced,
+    Performance,
+    UltraPerformance,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum FSRMode {
+    Off,
+    UltraQuality,
+    Quality,
+    Balanced,
+    Performance,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GraphicsSettings {
+    pub texture_quality: Quality,
+    pub shadow_quality: Quality,
+    pub anti_aliasing: AntiAliasing,
+    pub anisotropic_filtering: u8,
+    pub variable_rate_shading: bool,
+    pub mesh_shaders: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Quality {
+    Low,
+    Medium,
+    High,
+    Ultra,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AntiAliasing {
+    Off,
+    FXAA,
+    MSAA2x,
+    MSAA4x,
+    MSAA8x,
+    TAA,
+}
+
+impl GamingWorkloadConfig {
+    /// Create Cyberpunk 2077 4K RT workload
+    pub fn cyberpunk_4k_rt() -> Self {
+        Self {
+            game_name: "Cyberpunk 2077".to_string(),
+            resolution: (3840, 2160),
+            ray_tracing: true,
+            dlss_mode: DLSSMode::Quality,
+            fsr_mode: FSRMode::Off,
+            graphics_settings: GraphicsSettings {
+                texture_quality: Quality::Ultra,
+                shadow_quality: Quality::High,
+                anti_aliasing: AntiAliasing::TAA,
+                anisotropic_filtering: 16,
+                variable_rate_shading: true,
+                mesh_shaders: true,
+            },
+            target_fps: 60.0,
+            scene_complexity: 0.8,
+        }
+    }
+
+    /// Create competitive gaming workload (Valorant)
+    pub fn valorant_competitive() -> Self {
+        Self {
+            game_name: "Valorant".to_string(),
+            resolution: (1920, 1080),
+            ray_tracing: false,
+            dlss_mode: DLSSMode::Off,
+            fsr_mode: FSRMode::Off,
+            graphics_settings: GraphicsSettings {
+                texture_quality: Quality::High,
+                shadow_quality: Quality::Low,
+                anti_aliasing: AntiAliasing::FXAA,
+                anisotropic_filtering: 8,
+                variable_rate_shading: false,
+                mesh_shaders: false,
+            },
+            target_fps: 240.0,
+            scene_complexity: 0.3,
+        }
+    }
+
+    /// Convert gaming workload to ModelConfig for emulator
+    pub fn to_model_config(&self) -> ModelConfig {
+        let _pixel_count = (self.resolution.0 * self.resolution.1) as f64;
+
+        // Calculate FLOPS based on graphics pipeline
+        let base_flops_per_frame = self.calculate_base_flops();
+        let rt_flops = if self.ray_tracing { self.calculate_ray_tracing_flops() } else { 0.0 };
+        let post_processing_flops = self.calculate_post_processing_flops();
+
+        let total_flops_per_frame = base_flops_per_frame + rt_flops + post_processing_flops;
+
+        // Target batch size = frames in flight (typically 2-3)
+        let frames_in_flight = if self.target_fps >= 120.0 { 2 } else { 3 };
+
+        // Convert to FLOPS per sample in billions
+        let flops_per_sample_g = (total_flops_per_frame /
+            (frames_in_flight as f64) /
+            1_000_000_000.0) as f32;
+
+        // Estimate "parameters" based on GPU state complexity
+        let memory_usage_mb = self.calculate_memory_usage();
+        let parameters_m = (memory_usage_mb / 4.0) as f32; // Assuming 4 bytes per parameter
+
+        ModelConfig {
+            name: format!("Gaming_{}", self.game_name.replace(" ", "_")),
+            batch_size: frames_in_flight,
+            input_shape: vec![self.resolution.0 as usize, self.resolution.1 as usize, 4], // RGBA
+            parameters_m,
+            flops_per_sample_g,
+            model_type: "gaming".to_string(),
+            precision: "fp32".to_string(), // Gaming typically uses FP32
+        }
+    }
+
+    /// Calculate base rasterization FLOPS
+    fn calculate_base_flops(&self) -> f64 {
+        let pixel_count = (self.resolution.0 * self.resolution.1) as f64;
+        let scene_complexity = self.scene_complexity;
+
+        // Base shader calculations: vertex + fragment shaders (scaled for realism)
+        let vertex_flops = pixel_count * 10.0; // ~10 FLOPS per vertex shader (reduced from 100)
+        let fragment_flops = pixel_count * 30.0 * scene_complexity; // ~30 FLOPS per fragment shader (reduced from 300)
+
+        // Graphics settings impact
+        let texture_multiplier = match self.graphics_settings.texture_quality {
+            Quality::Ultra => 1.5,
+            Quality::High => 1.2,
+            Quality::Medium => 1.0,
+            Quality::Low => 0.8,
+        };
+
+        let shadow_multiplier = match self.graphics_settings.shadow_quality {
+            Quality::Ultra => 2.0,
+            Quality::High => 1.5,
+            Quality::Medium => 1.0,
+            Quality::Low => 0.5,
+        };
+
+        let aa_multiplier = match self.graphics_settings.anti_aliasing {
+            AntiAliasing::MSAA8x => 8.0,
+            AntiAliasing::MSAA4x => 4.0,
+            AntiAliasing::MSAA2x => 2.0,
+            AntiAliasing::TAA => 1.3,
+            AntiAliasing::FXAA => 1.1,
+            AntiAliasing::Off => 1.0,
+        };
+
+        (vertex_flops + fragment_flops) * texture_multiplier * shadow_multiplier * aa_multiplier
+    }
+
+    /// Calculate ray tracing FLOPS
+    fn calculate_ray_tracing_flops(&self) -> f64 {
+        if !self.ray_tracing {
+            return 0.0;
+        }
+
+        let pixel_count = (self.resolution.0 * self.resolution.1) as f64;
+        let scene_complexity = self.scene_complexity;
+
+        // Ray tracing is expensive but scaled for realism
+        // ~200-500 FLOPS per ray, 1-2 rays per pixel (reduced from 1000-5000 FLOPS)
+        let rays_per_pixel = 1.5 * scene_complexity; // 1-1.5 rays per pixel
+        let flops_per_ray = 300.0; // Average ray tracing FLOPS (reduced from 2000)
+
+        pixel_count * rays_per_pixel * flops_per_ray
+    }
+
+    /// Calculate post-processing FLOPS (DLSS, FSR, etc.)
+    fn calculate_post_processing_flops(&self) -> f64 {
+        let pixel_count = (self.resolution.0 * self.resolution.1) as f64;
+        let mut post_flops = 0.0;
+
+        // DLSS neural network inference (scaled for realism)
+        match self.dlss_mode {
+            DLSSMode::Off => {}
+            DLSSMode::Quality => {
+                post_flops += pixel_count * 5.0;
+            } // 5 FLOPS per pixel (reduced from 50)
+            DLSSMode::Balanced => {
+                post_flops += pixel_count * 4.5;
+            }
+            DLSSMode::Performance => {
+                post_flops += pixel_count * 4.0;
+            }
+            DLSSMode::UltraPerformance => {
+                post_flops += pixel_count * 3.5;
+            }
+        }
+
+        // FSR upscaling
+        match self.fsr_mode {
+            FSRMode::Off => {}
+            _ => {
+                post_flops += pixel_count * 2.0;
+            } // 2 FLOPS per pixel for FSR (reduced from 20)
+        }
+
+        post_flops
+    }
+
+    /// Calculate memory usage for gaming workload
+    fn calculate_memory_usage(&self) -> f64 {
+        let pixel_count = (self.resolution.0 * self.resolution.1) as f64;
+        let scene_complexity = self.scene_complexity;
+
+        // Frame buffers (color, depth, stencil)
+        let frame_buffer_mb = (pixel_count * 4.0 * 4.0) / (1024.0 * 1024.0); // 4 bytes per pixel, 4 buffers
+
+        // Textures - depends on quality and scene complexity
+        let texture_mb = match self.graphics_settings.texture_quality {
+            Quality::Ultra => 8000.0 * scene_complexity,
+            Quality::High => 6000.0 * scene_complexity,
+            Quality::Medium => 4000.0 * scene_complexity,
+            Quality::Low => 2000.0 * scene_complexity,
+        };
+
+        // Ray tracing data structures
+        let rt_mb = if self.ray_tracing {
+            2000.0 * scene_complexity // BVH + ray data
+        } else {
+            0.0
+        };
+
+        // DLSS model weights
+        let dlss_mb = if matches!(self.dlss_mode, DLSSMode::Off) {
+            0.0
+        } else {
+            150.0 // DLSS model size
+        };
+
+        frame_buffer_mb + texture_mb + rt_mb + dlss_mb
     }
 }
