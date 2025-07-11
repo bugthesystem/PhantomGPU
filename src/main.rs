@@ -27,6 +27,7 @@ pub mod batch_optimizer;
 pub mod power_modeling;
 pub mod gaming_accuracy_test;
 pub mod unified_gaming_emulator;
+pub mod gaming_benchmark_calibrator;
 
 // Real model support
 #[cfg(feature = "real-models")]

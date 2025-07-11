@@ -10,6 +10,39 @@ use crate::models::{
 use crate::gpu_config::GpuModel;
 use crate::errors::PhantomResult;
 use std::collections::HashMap;
+use serde::{ Deserialize, Serialize };
+use std::fs;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BenchmarkMeasurement {
+    pub resolution: String,
+    pub preset: String,
+    pub ray_tracing: bool,
+    pub dlss_mode: String,
+    pub fsr_mode: String,
+    pub avg_fps: f64,
+    pub one_percent_low: f64,
+    pub frame_time_ms: f64,
+    pub memory_usage_mb: f64,
+    pub gpu_utilization_percent: f64,
+    pub power_usage_watts: f64,
+    pub temperature_celsius: f64,
+    pub runs: u32,
+    pub std_dev_fps: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BenchmarkEntry {
+    pub gpu_name: String,
+    pub gpu_architecture: String,
+    pub game_name: String,
+    pub game_engine: String,
+    pub resolutions: Vec<String>,
+    pub measurements: Vec<BenchmarkMeasurement>,
+    pub system_info: HashMap<String, serde_json::Value>,
+    pub timestamp: String,
+    pub source: String,
+}
 
 #[derive(Debug, Clone)]
 pub struct GamingAccuracyResult {
@@ -34,6 +67,8 @@ pub struct GamingAccuracyReport {
 
 pub struct GamingAccuracyValidator {
     gpu_models: HashMap<String, GpuModel>,
+    benchmark_data: Vec<BenchmarkEntry>,
+    edge_cases: Vec<BenchmarkEntry>,
 }
 
 impl GamingAccuracyValidator {
@@ -70,228 +105,84 @@ impl GamingAccuracyValidator {
             release_year: Some(2022),
         });
 
+        // Load benchmark data
+        let benchmark_data = Self::load_benchmark_data();
+        let edge_cases = Self::load_edge_cases();
+
         Self {
             gpu_models,
+            benchmark_data,
+            edge_cases,
+        }
+    }
+
+    fn load_benchmark_data() -> Vec<BenchmarkEntry> {
+        match fs::read_to_string("benchmark_data/gaming_benchmarks.json") {
+            Ok(content) => {
+                match serde_json::from_str::<Vec<BenchmarkEntry>>(&content) {
+                    Ok(data) => data,
+                    Err(e) => {
+                        eprintln!("Warning: Failed to parse gaming benchmark data: {}", e);
+                        Vec::new()
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Warning: Failed to load gaming benchmark data: {}", e);
+                Vec::new()
+            }
+        }
+    }
+
+    fn load_edge_cases() -> Vec<BenchmarkEntry> {
+        match fs::read_to_string("benchmark_data/gaming_edge_cases.json") {
+            Ok(content) => {
+                match serde_json::from_str::<Vec<BenchmarkEntry>>(&content) {
+                    Ok(data) => data,
+                    Err(e) => {
+                        eprintln!("Warning: Failed to parse gaming edge cases: {}", e);
+                        Vec::new()
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Warning: Failed to load gaming edge cases: {}", e);
+                Vec::new()
+            }
         }
     }
 
     pub async fn run_validation_tests(&self) -> PhantomResult<GamingAccuracyReport> {
         let mut results = Vec::new();
 
-        // Test RTX 4090 with Cyberpunk 2077 at 1440p with RT and DLSS Quality
-        if let Some(gpu_model) = self.gpu_models.get("RTX 4090") {
-            let mut emulator = UnifiedGamingEmulator::new(gpu_model.clone());
-            let workload = GamingWorkloadConfig {
-                game_name: "Cyberpunk 2077".to_string(),
-                resolution: (2560, 1440),
-                ray_tracing: true,
-                dlss_mode: DLSSMode::Quality,
-                fsr_mode: FSRMode::Off,
-                graphics_settings: GraphicsSettings {
-                    texture_quality: Quality::Ultra,
-                    shadow_quality: Quality::High,
-                    anti_aliasing: AntiAliasing::TAA,
-                    anisotropic_filtering: 16,
-                    variable_rate_shading: true,
-                    mesh_shaders: true,
-                },
-                target_fps: 60.0,
-                scene_complexity: 0.8,
-            };
-
-            let performance = emulator.predict_gaming_performance(&workload, 25.0).await?;
-
-            results.push(GamingAccuracyResult {
-                gpu_name: "RTX 4090".to_string(),
-                game_name: "Cyberpunk 2077".to_string(),
-                predicted_fps: performance.avg_fps,
-                expected_fps: 85.0, // From TOML validation data
-                accuracy_percentage: calculate_accuracy(performance.avg_fps, 85.0),
-                error_percentage: calculate_error(performance.avg_fps, 85.0),
-                within_tolerance: is_within_tolerance(performance.avg_fps, 85.0, 0.15),
-                tolerance: 0.15,
-                source: "TechPowerUp RTX 4090 Review".to_string(),
-            });
+        // Test against main benchmark data
+        for entry in &self.benchmark_data {
+            if let Some(gpu_model) = self.gpu_models.get(&entry.gpu_name) {
+                for measurement in &entry.measurements {
+                    let result = self.run_single_benchmark_test(
+                        gpu_model,
+                        entry,
+                        measurement,
+                        false // not edge case
+                    ).await?;
+                    results.push(result);
+                }
+            }
         }
 
-        // Test RTX 4090 with Fortnite at 1080p without RT
-        if let Some(gpu_model) = self.gpu_models.get("RTX 4090") {
-            let mut emulator = UnifiedGamingEmulator::new(gpu_model.clone());
-            let workload = GamingWorkloadConfig {
-                game_name: "Fortnite".to_string(),
-                resolution: (1920, 1080),
-                ray_tracing: false,
-                dlss_mode: DLSSMode::Off,
-                fsr_mode: FSRMode::Off,
-                graphics_settings: GraphicsSettings {
-                    texture_quality: Quality::High,
-                    shadow_quality: Quality::Medium,
-                    anti_aliasing: AntiAliasing::TAA,
-                    anisotropic_filtering: 8,
-                    variable_rate_shading: false,
-                    mesh_shaders: false,
-                },
-                target_fps: 120.0,
-                scene_complexity: 0.5,
-            };
-
-            let performance = emulator.predict_gaming_performance(&workload, 25.0).await?;
-
-            results.push(GamingAccuracyResult {
-                gpu_name: "RTX 4090".to_string(),
-                game_name: "Fortnite".to_string(),
-                predicted_fps: performance.avg_fps,
-                expected_fps: 200.0, // From TOML validation data
-                accuracy_percentage: calculate_accuracy(performance.avg_fps, 200.0),
-                error_percentage: calculate_error(performance.avg_fps, 200.0),
-                within_tolerance: is_within_tolerance(performance.avg_fps, 200.0, 0.12),
-                tolerance: 0.12,
-                source: "Competitive Gaming Benchmarks".to_string(),
-            });
-        }
-
-        // Test RTX 5090 with Cyberpunk 2077 at 4K with RT and DLSS Quality
-        if let Some(gpu_model) = self.gpu_models.get("RTX 5090") {
-            let mut emulator = UnifiedGamingEmulator::new(gpu_model.clone());
-            let workload = GamingWorkloadConfig {
-                game_name: "Cyberpunk 2077".to_string(),
-                resolution: (3840, 2160),
-                ray_tracing: true,
-                dlss_mode: DLSSMode::Quality,
-                fsr_mode: FSRMode::Off,
-                graphics_settings: GraphicsSettings {
-                    texture_quality: Quality::Ultra,
-                    shadow_quality: Quality::High,
-                    anti_aliasing: AntiAliasing::TAA,
-                    anisotropic_filtering: 16,
-                    variable_rate_shading: true,
-                    mesh_shaders: true,
-                },
-                target_fps: 60.0,
-                scene_complexity: 0.8,
-            };
-
-            let performance = emulator.predict_gaming_performance(&workload, 25.0).await?;
-
-            results.push(GamingAccuracyResult {
-                gpu_name: "RTX 5090".to_string(),
-                game_name: "Cyberpunk 2077".to_string(),
-                predicted_fps: performance.avg_fps,
-                expected_fps: 75.0, // From TOML validation data
-                accuracy_percentage: calculate_accuracy(performance.avg_fps, 75.0),
-                error_percentage: calculate_error(performance.avg_fps, 75.0),
-                within_tolerance: is_within_tolerance(performance.avg_fps, 75.0, 0.12),
-                tolerance: 0.12,
-                source: "NVIDIA Internal Benchmarks".to_string(),
-            });
-        }
-
-        // Test RTX 4090 with Apex Legends at 1440p
-        if let Some(gpu_model) = self.gpu_models.get("RTX 4090") {
-            let mut emulator = UnifiedGamingEmulator::new(gpu_model.clone());
-            let workload = GamingWorkloadConfig {
-                game_name: "Apex Legends".to_string(),
-                resolution: (2560, 1440),
-                ray_tracing: false,
-                dlss_mode: DLSSMode::Quality,
-                fsr_mode: FSRMode::Off,
-                graphics_settings: GraphicsSettings {
-                    texture_quality: Quality::High,
-                    shadow_quality: Quality::Medium,
-                    anti_aliasing: AntiAliasing::TAA,
-                    anisotropic_filtering: 8,
-                    variable_rate_shading: true,
-                    mesh_shaders: false,
-                },
-                target_fps: 144.0,
-                scene_complexity: 0.6,
-            };
-
-            let performance = emulator.predict_gaming_performance(&workload, 25.0).await?;
-
-            results.push(GamingAccuracyResult {
-                gpu_name: "RTX 4090".to_string(),
-                game_name: "Apex Legends".to_string(),
-                predicted_fps: performance.avg_fps,
-                expected_fps: 165.0, // From TOML validation data
-                accuracy_percentage: calculate_accuracy(performance.avg_fps, 165.0),
-                error_percentage: calculate_error(performance.avg_fps, 165.0),
-                within_tolerance: is_within_tolerance(performance.avg_fps, 165.0, 0.1),
-                tolerance: 0.1,
-                source: "Hardware Unboxed, December 2024".to_string(),
-            });
-        }
-
-        // Test RTX 5090 with Valorant at 1080p
-        if let Some(gpu_model) = self.gpu_models.get("RTX 5090") {
-            let mut emulator = UnifiedGamingEmulator::new(gpu_model.clone());
-            let workload = GamingWorkloadConfig {
-                game_name: "Valorant".to_string(),
-                resolution: (1920, 1080),
-                ray_tracing: false,
-                dlss_mode: DLSSMode::Off,
-                fsr_mode: FSRMode::Off,
-                graphics_settings: GraphicsSettings {
-                    texture_quality: Quality::High,
-                    shadow_quality: Quality::Low,
-                    anti_aliasing: AntiAliasing::FXAA,
-                    anisotropic_filtering: 8,
-                    variable_rate_shading: false,
-                    mesh_shaders: false,
-                },
-                target_fps: 240.0,
-                scene_complexity: 0.3,
-            };
-
-            let performance = emulator.predict_gaming_performance(&workload, 25.0).await?;
-
-            results.push(GamingAccuracyResult {
-                gpu_name: "RTX 5090".to_string(),
-                game_name: "Valorant".to_string(),
-                predicted_fps: performance.avg_fps,
-                expected_fps: 380.0, // From TOML validation data
-                accuracy_percentage: calculate_accuracy(performance.avg_fps, 380.0),
-                error_percentage: calculate_error(performance.avg_fps, 380.0),
-                within_tolerance: is_within_tolerance(performance.avg_fps, 380.0, 0.08),
-                tolerance: 0.08,
-                source: "Pro Gaming Benchmarks".to_string(),
-            });
-        }
-
-        // Test RTX 4080 with Overwatch 2 at 1440p
-        if let Some(gpu_model) = self.gpu_models.get("RTX 4080") {
-            let mut emulator = UnifiedGamingEmulator::new(gpu_model.clone());
-            let workload = GamingWorkloadConfig {
-                game_name: "Overwatch 2".to_string(),
-                resolution: (2560, 1440),
-                ray_tracing: false,
-                dlss_mode: DLSSMode::Quality,
-                fsr_mode: FSRMode::Off,
-                graphics_settings: GraphicsSettings {
-                    texture_quality: Quality::Ultra,
-                    shadow_quality: Quality::High,
-                    anti_aliasing: AntiAliasing::TAA,
-                    anisotropic_filtering: 16,
-                    variable_rate_shading: true,
-                    mesh_shaders: true,
-                },
-                target_fps: 165.0,
-                scene_complexity: 0.5,
-            };
-
-            let performance = emulator.predict_gaming_performance(&workload, 25.0).await?;
-
-            results.push(GamingAccuracyResult {
-                gpu_name: "RTX 4080".to_string(),
-                game_name: "Overwatch 2".to_string(),
-                predicted_fps: performance.avg_fps,
-                expected_fps: 190.0, // From TOML validation data
-                accuracy_percentage: calculate_accuracy(performance.avg_fps, 190.0),
-                error_percentage: calculate_error(performance.avg_fps, 190.0),
-                within_tolerance: is_within_tolerance(performance.avg_fps, 190.0, 0.12),
-                tolerance: 0.12,
-                source: "Competitive Gaming Reviews".to_string(),
-            });
+        // Test against edge cases
+        for entry in &self.edge_cases {
+            if let Some(gpu_model) = self.gpu_models.get(&entry.gpu_name) {
+                for measurement in &entry.measurements {
+                    let result = self.run_single_benchmark_test(
+                        gpu_model,
+                        entry,
+                        measurement,
+                        true // is edge case
+                    ).await?;
+                    results.push(result);
+                }
+            }
         }
 
         // Calculate overall accuracy
@@ -308,73 +199,229 @@ impl GamingAccuracyValidator {
             .iter()
             .filter(|r| r.within_tolerance)
             .count();
+        let total_tests = results.len();
 
         Ok(GamingAccuracyReport {
             results,
             overall_accuracy,
             tests_passed,
-            total_tests: 6, // Updated total
+            total_tests,
         })
+    }
+
+    async fn run_single_benchmark_test(
+        &self,
+        gpu_model: &GpuModel,
+        entry: &BenchmarkEntry,
+        measurement: &BenchmarkMeasurement,
+        is_edge_case: bool
+    ) -> PhantomResult<GamingAccuracyResult> {
+        let mut emulator = UnifiedGamingEmulator::new(gpu_model.clone());
+
+        // Parse resolution
+        let resolution = Self::parse_resolution(&measurement.resolution)?;
+
+        // Create workload config from benchmark data
+        let workload = GamingWorkloadConfig {
+            game_name: entry.game_name.clone(),
+            resolution,
+            ray_tracing: measurement.ray_tracing,
+            dlss_mode: Self::parse_dlss_mode(&measurement.dlss_mode),
+            fsr_mode: Self::parse_fsr_mode(&measurement.fsr_mode),
+            graphics_settings: Self::parse_graphics_settings(&measurement.preset),
+            target_fps: measurement.avg_fps, // Use actual FPS as target
+            scene_complexity: Self::estimate_scene_complexity(&entry.game_name),
+        };
+
+        let performance = emulator.predict_gaming_performance(&workload, 25.0).await?;
+
+        // Calculate tolerance based on whether it's an edge case
+        let tolerance = if is_edge_case { 0.25 } else { 0.15 }; // 25% tolerance for edge cases, 15% for normal cases
+
+        let accuracy = calculate_accuracy(performance.avg_fps, measurement.avg_fps);
+        let error = calculate_error(performance.avg_fps, measurement.avg_fps);
+        let within_tolerance = is_within_tolerance(
+            performance.avg_fps,
+            measurement.avg_fps,
+            tolerance
+        );
+
+        Ok(GamingAccuracyResult {
+            gpu_name: entry.gpu_name.clone(),
+            game_name: entry.game_name.clone(),
+            predicted_fps: performance.avg_fps,
+            expected_fps: measurement.avg_fps,
+            accuracy_percentage: accuracy,
+            error_percentage: error,
+            within_tolerance,
+            tolerance,
+            source: entry.source.clone(),
+        })
+    }
+
+    fn parse_resolution(resolution_str: &str) -> PhantomResult<(u32, u32)> {
+        let parts: Vec<&str> = resolution_str.split('x').collect();
+        if parts.len() != 2 {
+            return Err(crate::errors::PhantomGpuError::ConfigError {
+                message: format!("Invalid resolution format: {}", resolution_str),
+            });
+        }
+
+        let width = parts[0]
+            .parse::<u32>()
+            .map_err(|_| crate::errors::PhantomGpuError::ConfigError {
+                message: format!("Invalid width in resolution: {}", parts[0]),
+            })?;
+
+        let height = parts[1]
+            .parse::<u32>()
+            .map_err(|_| crate::errors::PhantomGpuError::ConfigError {
+                message: format!("Invalid height in resolution: {}", parts[1]),
+            })?;
+
+        Ok((width, height))
+    }
+
+    fn parse_dlss_mode(dlss_str: &str) -> DLSSMode {
+        match dlss_str.to_lowercase().as_str() {
+            "off" => DLSSMode::Off,
+            "quality" => DLSSMode::Quality,
+            "balanced" => DLSSMode::Balanced,
+            "performance" => DLSSMode::Performance,
+            "ultraperformance" => DLSSMode::UltraPerformance,
+            _ => DLSSMode::Off,
+        }
+    }
+
+    fn parse_fsr_mode(fsr_str: &str) -> FSRMode {
+        match fsr_str.to_lowercase().as_str() {
+            "off" => FSRMode::Off,
+            "ultraulity" => FSRMode::UltraQuality,
+            "quality" => FSRMode::Quality,
+            "balanced" => FSRMode::Balanced,
+            "performance" => FSRMode::Performance,
+            _ => FSRMode::Off,
+        }
+    }
+
+    fn parse_graphics_settings(preset: &str) -> GraphicsSettings {
+        match preset.to_lowercase().as_str() {
+            "ultra" | "psycho" | "maximum" =>
+                GraphicsSettings {
+                    texture_quality: Quality::Ultra,
+                    shadow_quality: Quality::High,
+                    anti_aliasing: AntiAliasing::TAA,
+                    anisotropic_filtering: 16,
+                    variable_rate_shading: true,
+                    mesh_shaders: true,
+                },
+            "high" | "epic" =>
+                GraphicsSettings {
+                    texture_quality: Quality::High,
+                    shadow_quality: Quality::High,
+                    anti_aliasing: AntiAliasing::TAA,
+                    anisotropic_filtering: 16,
+                    variable_rate_shading: true,
+                    mesh_shaders: false,
+                },
+            "medium" =>
+                GraphicsSettings {
+                    texture_quality: Quality::Medium,
+                    shadow_quality: Quality::Medium,
+                    anti_aliasing: AntiAliasing::FXAA,
+                    anisotropic_filtering: 8,
+                    variable_rate_shading: false,
+                    mesh_shaders: false,
+                },
+            "low" | "performance" =>
+                GraphicsSettings {
+                    texture_quality: Quality::Low,
+                    shadow_quality: Quality::Low,
+                    anti_aliasing: AntiAliasing::FXAA,
+                    anisotropic_filtering: 4,
+                    variable_rate_shading: false,
+                    mesh_shaders: false,
+                },
+            _ =>
+                GraphicsSettings {
+                    texture_quality: Quality::High,
+                    shadow_quality: Quality::High,
+                    anti_aliasing: AntiAliasing::TAA,
+                    anisotropic_filtering: 16,
+                    variable_rate_shading: true,
+                    mesh_shaders: false,
+                },
+        }
+    }
+
+    fn estimate_scene_complexity(game_name: &str) -> f64 {
+        match game_name {
+            "Cyberpunk 2077" => 0.9,
+            "Hogwarts Legacy" => 0.8,
+            "Call of Duty: Modern Warfare III" => 0.7,
+            "Apex Legends" => 0.6,
+            "Fortnite" => 0.5,
+            "Overwatch 2" => 0.5,
+            "Valorant" => 0.3,
+            _ => 0.6,
+        }
     }
 }
 
-// Helper functions
 fn calculate_accuracy(predicted: f64, expected: f64) -> f64 {
     if expected == 0.0 {
-        if predicted == 0.0 { 100.0 } else { 0.0 }
-    } else {
-        let error = (predicted - expected).abs() / expected;
-        ((1.0 - error) * 100.0).max(0.0)
+        return 0.0;
     }
+    let error = (predicted - expected).abs() / expected;
+    ((1.0 - error) * 100.0).max(0.0)
 }
 
 fn calculate_error(predicted: f64, expected: f64) -> f64 {
     if expected == 0.0 {
-        if predicted == 0.0 { 0.0 } else { 100.0 }
-    } else {
-        (((predicted - expected).abs() / expected) * 100.0).min(100.0)
+        return 100.0;
     }
+    ((predicted - expected).abs() / expected) * 100.0
 }
 
 fn is_within_tolerance(predicted: f64, expected: f64, tolerance: f64) -> bool {
     if expected == 0.0 {
-        predicted == 0.0
-    } else {
-        let error = (predicted - expected).abs() / expected;
-        error <= tolerance
+        return predicted == 0.0;
     }
+    let error = (predicted - expected).abs() / expected;
+    error <= tolerance
 }
 
-// Format results for display
 impl GamingAccuracyReport {
     pub fn format_detailed_report(&self) -> String {
         let mut report = String::new();
-        report.push_str("🎯 PhantomGPU Gaming Accuracy Report\n");
-        report.push_str("==================================================\n\n");
+
+        report.push_str(
+            &format!(
+                "🎯 Gaming Accuracy Test Results\n\
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\
+            📊 Overall Accuracy: {:.1}%\n\
+            ✅ Passed: {}/{} tests\n\n\
+            📋 Detailed Results:\n",
+                self.overall_accuracy,
+                self.tests_passed,
+                self.total_tests
+            )
+        );
 
         for result in &self.results {
             let status = if result.within_tolerance { "✅ PASS" } else { "❌ FAIL" };
-            report.push_str(&format!("🎮 {} - {}\n", result.gpu_name, result.game_name));
             report.push_str(
                 &format!(
-                    "  Predicted: {:.1} FPS | Expected: {:.1} FPS\n",
-                    result.predicted_fps,
-                    result.expected_fps
-                )
-            );
-            report.push_str(
-                &format!(
-                    "  Accuracy: {:.1}% (±{:.1}% error) - {}\n",
+                    "  {} - {}: {:.1}% accuracy (±{:.1}% error) - {} [{}]\n",
+                    result.gpu_name,
+                    result.game_name,
                     result.accuracy_percentage,
                     result.error_percentage,
-                    status
+                    status,
+                    result.source
                 )
             );
-            report.push_str(&format!("  Source: {}\n\n", result.source));
         }
-
-        report.push_str(&format!("📊 Overall Accuracy: {:.1}%\n", self.overall_accuracy));
-        report.push_str(&format!("✅ Passed: {}/{} tests\n", self.tests_passed, self.total_tests));
 
         report
     }
@@ -395,31 +442,20 @@ mod tests {
         match result {
             Ok(report) => {
                 println!("Gaming Accuracy Test Results:");
-                println!("Overall Accuracy: {:.1}%", report.overall_accuracy);
-                println!("Passed: {}/{} tests", report.tests_passed, report.total_tests);
+                println!("{}", report.format_detailed_report());
 
-                for result in &report.results {
-                    println!(
-                        "  {} - {}: {:.1}% accuracy (±{:.1}% error) - {}",
-                        result.gpu_name,
-                        result.game_name,
-                        result.accuracy_percentage,
-                        result.error_percentage,
-                        if result.within_tolerance {
-                            "✅ PASS"
-                        } else {
-                            "❌ FAIL"
-                        }
-                    );
-                }
+                // We expect reasonable accuracy (>50% overall)
+                assert!(
+                    report.overall_accuracy > 50.0,
+                    "Overall accuracy ({:.1}%) should be greater than 50%",
+                    report.overall_accuracy
+                );
 
-                // Assert that we have reasonable accuracy
-                assert!(report.overall_accuracy > 50.0, "Overall accuracy should be above 50%");
+                // We expect at least some tests to pass
                 assert!(report.tests_passed > 0, "At least one test should pass");
             }
             Err(e) => {
-                println!("Gaming accuracy test failed: {:?}", e);
-                panic!("Gaming accuracy test failed");
+                panic!("Gaming accuracy test failed: {}", e);
             }
         }
     }

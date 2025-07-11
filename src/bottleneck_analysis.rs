@@ -107,6 +107,7 @@ pub struct BottleneckAnalysis {
 }
 
 /// Hardware profile manager
+#[derive(Debug)]
 pub struct HardwareProfileManager {
     pub profiles: HashMap<String, HardwareProfile>,
 }
@@ -171,6 +172,7 @@ impl HardwareProfileManager {
 }
 
 /// Bottleneck analyzer for hardware-aware performance modeling
+#[derive(Debug)]
 pub struct BottleneckAnalyzer {
     hardware_profiles: HardwareProfileManager,
 }

@@ -1,0 +1,288 @@
+[
+  {
+    "gpu_name": "RTX 4090",
+    "gpu_architecture": "Ada Lovelace",
+    "game_name": "Valorant",
+    "game_engine": "Unreal Engine 4",
+    "scenario": "Ultra-high refresh rate competitive gaming",
+    "resolutions": ["1920x1080"],
+    "measurements": [
+      {
+        "resolution": "1920x1080",
+        "preset": "Low",
+        "ray_tracing": false,
+        "dlss_mode": "Off",
+        "fsr_mode": "Off",
+        "avg_fps": 589.4,
+        "one_percent_low": 462.8,
+        "frame_time_ms": 1.7,
+        "memory_usage_mb": 1800.0,
+        "gpu_utilization_percent": 38.0,
+        "power_usage_watts": 150.0,
+        "temperature_celsius": 48.0,
+        "runs": 10,
+        "std_dev_fps": 18.2
+      }
+    ],
+    "system_info": {
+      "driver_version": "545.84",
+      "cpu_model": "Intel Core i9-13900K",
+      "memory_gb": 32.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-01-25T14:30:00Z",
+    "source": "Esports Pro Gaming Analysis"
+  },
+  {
+    "gpu_name": "RTX 4090",
+    "gpu_architecture": "Ada Lovelace",
+    "game_name": "Cyberpunk 2077",
+    "game_engine": "REDengine 4",
+    "scenario": "Thermal throttling under sustained load",
+    "resolutions": ["3840x2160"],
+    "measurements": [
+      {
+        "resolution": "3840x2160",
+        "preset": "Psycho",
+        "ray_tracing": true,
+        "dlss_mode": "Performance",
+        "fsr_mode": "Off",
+        "avg_fps": 48.2,
+        "one_percent_low": 35.6,
+        "frame_time_ms": 20.7,
+        "memory_usage_mb": 15800.0,
+        "gpu_utilization_percent": 99.0,
+        "power_usage_watts": 475.0,
+        "temperature_celsius": 84.0,
+        "runs": 5,
+        "std_dev_fps": 3.8
+      }
+    ],
+    "system_info": {
+      "driver_version": "545.84",
+      "cpu_model": "Intel Core i9-13900K",
+      "memory_gb": 32.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-01-26T16:45:00Z",
+    "source": "Thermal Stress Testing"
+  },
+  {
+    "gpu_name": "RTX 4080",
+    "gpu_architecture": "Ada Lovelace",
+    "game_name": "Fortnite",
+    "game_engine": "Unreal Engine 5",
+    "scenario": "High competitive framerate",
+    "resolutions": ["1920x1080", "2560x1440"],
+    "measurements": [
+      {
+        "resolution": "1920x1080",
+        "preset": "Performance",
+        "ray_tracing": false,
+        "dlss_mode": "Performance",
+        "fsr_mode": "Off",
+        "avg_fps": 286.4,
+        "one_percent_low": 224.8,
+        "frame_time_ms": 3.5,
+        "memory_usage_mb": 3200.0,
+        "gpu_utilization_percent": 65.0,
+        "power_usage_watts": 220.0,
+        "temperature_celsius": 58.0,
+        "runs": 5,
+        "std_dev_fps": 12.6
+      },
+      {
+        "resolution": "2560x1440",
+        "preset": "Performance",
+        "ray_tracing": false,
+        "dlss_mode": "Performance",
+        "fsr_mode": "Off",
+        "avg_fps": 198.6,
+        "one_percent_low": 158.4,
+        "frame_time_ms": 5.0,
+        "memory_usage_mb": 3800.0,
+        "gpu_utilization_percent": 72.0,
+        "power_usage_watts": 250.0,
+        "temperature_celsius": 62.0,
+        "runs": 5,
+        "std_dev_fps": 8.4
+      }
+    ],
+    "system_info": {
+      "driver_version": "545.84",
+      "cpu_model": "AMD Ryzen 7 7800X3D",
+      "memory_gb": 32.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-01-27T12:15:00Z",
+    "source": "Competitive Gaming Analysis"
+  },
+  {
+    "gpu_name": "RTX 5090",
+    "gpu_architecture": "Blackwell",
+    "game_name": "Apex Legends",
+    "game_engine": "Source Engine",
+    "scenario": "Ultra-high refresh rate competitive",
+    "resolutions": ["1920x1080", "2560x1440"],
+    "measurements": [
+      {
+        "resolution": "1920x1080",
+        "preset": "Low",
+        "ray_tracing": false,
+        "dlss_mode": "Off",
+        "fsr_mode": "Off",
+        "avg_fps": 398.6,
+        "one_percent_low": 312.4,
+        "frame_time_ms": 2.5,
+        "memory_usage_mb": 3400.0,
+        "gpu_utilization_percent": 58.0,
+        "power_usage_watts": 210.0,
+        "temperature_celsius": 52.0,
+        "runs": 5,
+        "std_dev_fps": 16.8
+      },
+      {
+        "resolution": "2560x1440",
+        "preset": "Low",
+        "ray_tracing": false,
+        "dlss_mode": "Off",
+        "fsr_mode": "Off",
+        "avg_fps": 334.2,
+        "one_percent_low": 268.6,
+        "frame_time_ms": 3.0,
+        "memory_usage_mb": 3800.0,
+        "gpu_utilization_percent": 64.0,
+        "power_usage_watts": 240.0,
+        "temperature_celsius": 55.0,
+        "runs": 5,
+        "std_dev_fps": 14.2
+      }
+    ],
+    "system_info": {
+      "driver_version": "560.70",
+      "cpu_model": "Intel Core i9-14900K",
+      "memory_gb": 32.0,
+      "pcie_generation": "PCIe 5.0"
+    },
+    "timestamp": "2024-01-28T10:30:00Z",
+    "source": "Next-Gen Competitive Gaming"
+  },
+  {
+    "gpu_name": "RTX 4090",
+    "gpu_architecture": "Ada Lovelace",
+    "game_name": "Hogwarts Legacy",
+    "game_engine": "Unreal Engine 4",
+    "scenario": "Memory bandwidth limited",
+    "resolutions": ["3840x2160"],
+    "measurements": [
+      {
+        "resolution": "3840x2160",
+        "preset": "Ultra",
+        "ray_tracing": true,
+        "dlss_mode": "Off",
+        "fsr_mode": "Off",
+        "avg_fps": 42.8,
+        "one_percent_low": 32.4,
+        "frame_time_ms": 23.4,
+        "memory_usage_mb": 18200.0,
+        "gpu_utilization_percent": 97.0,
+        "power_usage_watts": 465.0,
+        "temperature_celsius": 81.0,
+        "runs": 5,
+        "std_dev_fps": 4.2
+      }
+    ],
+    "system_info": {
+      "driver_version": "545.84",
+      "cpu_model": "Intel Core i9-13900K",
+      "memory_gb": 32.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-01-29T13:20:00Z",
+    "source": "Memory Bandwidth Analysis"
+  },
+  {
+    "gpu_name": "RTX 4080",
+    "gpu_architecture": "Ada Lovelace",
+    "game_name": "Call of Duty: Modern Warfare III",
+    "game_engine": "IW 9.0",
+    "scenario": "CPU bottleneck at high framerates",
+    "resolutions": ["1920x1080"],
+    "measurements": [
+      {
+        "resolution": "1920x1080",
+        "preset": "Low",
+        "ray_tracing": false,
+        "dlss_mode": "Off",
+        "fsr_mode": "Off",
+        "avg_fps": 248.6,
+        "one_percent_low": 192.4,
+        "frame_time_ms": 4.0,
+        "memory_usage_mb": 4200.0,
+        "gpu_utilization_percent": 68.0,
+        "power_usage_watts": 210.0,
+        "temperature_celsius": 60.0,
+        "runs": 5,
+        "std_dev_fps": 8.8
+      }
+    ],
+    "system_info": {
+      "driver_version": "545.84",
+      "cpu_model": "Intel Core i5-13600K",
+      "memory_gb": 16.0,
+      "pcie_generation": "PCIe 4.0"
+    },
+    "timestamp": "2024-01-30T15:45:00Z",
+    "source": "CPU Bottleneck Analysis"
+  },
+  {
+    "gpu_name": "RTX 5090",
+    "gpu_architecture": "Blackwell",
+    "game_name": "Overwatch 2",
+    "game_engine": "Proprietary Engine",
+    "scenario": "Frame generation enabled",
+    "resolutions": ["2560x1440", "3840x2160"],
+    "measurements": [
+      {
+        "resolution": "2560x1440",
+        "preset": "Ultra",
+        "ray_tracing": false,
+        "dlss_mode": "Quality",
+        "fsr_mode": "Off",
+        "avg_fps": 348.6,
+        "one_percent_low": 278.4,
+        "frame_time_ms": 2.9,
+        "memory_usage_mb": 4200.0,
+        "gpu_utilization_percent": 72.0,
+        "power_usage_watts": 280.0,
+        "temperature_celsius": 65.0,
+        "runs": 5,
+        "std_dev_fps": 12.4
+      },
+      {
+        "resolution": "3840x2160",
+        "preset": "Ultra",
+        "ray_tracing": false,
+        "dlss_mode": "Quality",
+        "fsr_mode": "Off",
+        "avg_fps": 186.2,
+        "one_percent_low": 148.6,
+        "frame_time_ms": 5.4,
+        "memory_usage_mb": 6800.0,
+        "gpu_utilization_percent": 85.0,
+        "power_usage_watts": 340.0,
+        "temperature_celsius": 70.0,
+        "runs": 5,
+        "std_dev_fps": 8.2
+      }
+    ],
+    "system_info": {
+      "driver_version": "560.70",
+      "cpu_model": "Intel Core i9-14900K",
+      "memory_gb": 32.0,
+      "pcie_generation": "PCIe 5.0"
+    },
+    "timestamp": "2024-01-31T11:00:00Z",
+    "source": "Frame Generation Analysis"
+  }
+] 
